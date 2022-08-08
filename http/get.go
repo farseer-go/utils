@@ -24,6 +24,6 @@ func GetFormWithoutBody(url string, body any, requestTimeout int) string {
 func GetJson[TReturn any](url string, body any, requestTimeout int) TReturn {
 	rspJson := httpRequest("GET", url, body, "application/json", requestTimeout)
 	var val TReturn
-	json.Unmarshal([]byte(rspJson), &val)
+	_ = json.Unmarshal([]byte(rspJson), &val)
 	return val
 }

@@ -56,7 +56,7 @@ func RunShellContext(command string, receiveOutput chan string, environment map[
 func readInputStream(out io.ReadCloser, receiveOutput chan string, waitGroup *sync.WaitGroup) {
 	defer func() {
 		waitGroup.Done()
-		out.Close()
+		_ = out.Close()
 	}()
 	reader := bufio.NewReader(out)
 	for {

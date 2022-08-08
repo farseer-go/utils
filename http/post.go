@@ -23,6 +23,6 @@ func PostFormWithoutBody(url string, requestTimeout int) string {
 func PostJson[TReturn any](url string, body any, requestTimeout int) TReturn {
 	rspJson := httpRequest("POST", url, nil, "application/json", requestTimeout)
 	var val TReturn
-	json.Unmarshal([]byte(rspJson), &val)
+	_ = json.Unmarshal([]byte(rspJson), &val)
 	return val
 }

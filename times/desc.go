@@ -32,11 +32,3 @@ func GetDesc(ts time.Duration) string {
 func GetSubDesc(ts1 time.Time, ts2 time.Time) string {
 	return GetDesc(ts1.Sub(ts2))
 }
-
-// Hours returns the duration as a floating point number of hours.
-func getDay(d time.Duration) float64 {
-	day := 24 * time.Hour
-	hour := d / day
-	nsec := d % day
-	return float64(hour) + float64(nsec)/(24*60*60*1e9)
-}

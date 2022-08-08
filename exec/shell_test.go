@@ -8,7 +8,7 @@ import (
 
 func TestRunShell(t *testing.T) {
 	receiveOutput := make(chan string, 100)
-	ctx, _ := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(context.Background())
 	env := map[string]string{
 		"a": "b",
 	}
@@ -29,4 +29,5 @@ func TestRunShell(t *testing.T) {
 
 	exitCode := RunShellContext("go env", receiveOutput, env, "", ctx)
 	log.Println(exitCode)
+	cancel()
 }

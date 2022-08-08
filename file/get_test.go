@@ -11,8 +11,8 @@ import (
 func TestGetFiles(t *testing.T) {
 	path := "/Users/steden/Desktop/code/project/Farseer.Go"
 	files := GetFiles(path, "*.md", true)
-	for _, filepath := range files {
-		log.Println(filepath)
+	for _, file := range files {
+		log.Println(file)
 	}
 }
 

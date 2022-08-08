@@ -57,5 +57,5 @@ func CopyFile(srcName string, destName string) {
 		return
 	}
 	defer dst.Close()
-	io.Copy(dst, src)
+	_, _ = io.Copy(dst, src)
 }

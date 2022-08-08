@@ -42,7 +42,7 @@ func ClearFile(path string) {
 		if path == filePath {
 			return nil
 		}
-		os.RemoveAll(filePath)
+		_ = os.RemoveAll(filePath)
 		return nil
 	})
 }
