@@ -1,6 +1,7 @@
 package file
 
 import (
+	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"os"
 	"strconv"
@@ -13,9 +14,7 @@ func TestWriteString(t *testing.T) {
 
 	content := "aaa"
 	WriteString(file, content)
-	if ReadString(file) != content {
-		t.Error()
-	}
+	assert.Equal(t, ReadString(file), content)
 }
 
 func TestAppendString(t *testing.T) {
@@ -25,9 +24,7 @@ func TestAppendString(t *testing.T) {
 	WriteString(file, "aaa")
 	AppendString(file, "bbb")
 	readString := ReadString(file)
-	if readString != "aaabbb" {
-		t.Error(readString)
-	}
+	assert.Equal(t, readString, "aaabbb")
 }
 
 func TestAppendLine(t *testing.T) {
@@ -37,9 +34,7 @@ func TestAppendLine(t *testing.T) {
 	WriteString(file, "aaa")
 	AppendLine(file, "bbb")
 	readString := ReadString(file)
-	if readString != "aaa\nbbb" {
-		t.Error(readString)
-	}
+	assert.Equal(t, readString, "aaa\nbbb")
 }
 
 func TestAppendAllLine(t *testing.T) {
@@ -50,7 +45,5 @@ func TestAppendAllLine(t *testing.T) {
 	str := []string{"bbb", "ccc"}
 	AppendAllLine(file, str)
 	readString := ReadString(file)
-	if readString != "aaa\nbbb\nccc" {
-		t.Error(readString)
-	}
+	assert.Equal(t, readString, "aaa\nbbb\nccc")
 }

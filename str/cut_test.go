@@ -1,11 +1,10 @@
 package str
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestCutRight(t *testing.T) {
-	if CutRight("aaaacbb", "bb") != "aaaac" {
-		t.Error()
-	}
+	assert.Equal(t, CutRight("aaaacbb", "bb"), "aaaac")
 }
