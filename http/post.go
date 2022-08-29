@@ -21,7 +21,7 @@ func PostFormWithoutBody(url string, head map[string]any, requestTimeout int) st
 
 // PostJson Post方式将结果反序列化成TReturn
 func PostJson[TReturn any](url string, head map[string]any, body any, requestTimeout int) TReturn {
-	rspJson := httpRequest("POST", url, head, nil, "application/json", requestTimeout)
+	rspJson := httpRequest("POST", url, head, body, "application/json", requestTimeout)
 	var val TReturn
 	_ = json.Unmarshal([]byte(rspJson), &val)
 	return val
