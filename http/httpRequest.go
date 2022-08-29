@@ -2,12 +2,13 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/farseer-go/fs/parse"
 	"github.com/valyala/fasthttp"
 	"time"
 )
 
-// Get http get，支持请求超时设置，单位：ms
-func httpRequest(methodName string, url string, body any, contentType string, requestTimeout int) string {
+// 支持请求超时设置，单位：ms
+func httpRequest(methodName string, url string, head map[string]any, body any, contentType string, requestTimeout int) string {
 	client := fasthttp.Client{}
 
 	// request
@@ -24,6 +25,13 @@ func httpRequest(methodName string, url string, body any, contentType string, re
 	if contentType != "" {
 		request.Header.Set("Content-Type", contentType)
 	}
+
+	if head != nil || len(head) > 0 {
+		for k, v := range head {
+			request.Header.Set(k, parse.Convert(v, ""))
+		}
+	}
+
 	// Method
 	request.Header.SetMethod(methodName)
 
