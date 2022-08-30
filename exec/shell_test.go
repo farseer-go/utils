@@ -2,7 +2,7 @@ package exec
 
 import (
 	"context"
-	"log"
+	"github.com/farseer-go/fs/flog"
 	"testing"
 )
 
@@ -15,12 +15,12 @@ func TestRunShell(t *testing.T) {
 
 	go func() {
 		for output := range receiveOutput {
-			log.Println(output)
+			flog.Println(output)
 		}
 		//for {
 		//	select {
 		//	case output := <-receiveOutput:
-		//		log.Println(output)
+		//		flog.Println(output)
 		//	case <-ctx.Done():
 		//		return
 		//	}
@@ -28,6 +28,6 @@ func TestRunShell(t *testing.T) {
 	}()
 
 	exitCode := RunShellContext("go env", receiveOutput, env, "", ctx)
-	log.Println(exitCode)
+	flog.Println(exitCode)
 	cancel()
 }

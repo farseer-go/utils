@@ -1,8 +1,8 @@
 package file
 
 import (
+	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/utils/str"
-	"log"
 	"path/filepath"
 	"testing"
 )
@@ -12,7 +12,7 @@ func TestGetFiles(t *testing.T) {
 	path := "/Users/steden/Desktop/code/project/Farseer.Go"
 	files := GetFiles(path, "*.md", true)
 	for _, file := range files {
-		log.Println(file)
+		flog.Println(file)
 	}
 }
 
@@ -25,12 +25,12 @@ func TestClearFile(t *testing.T) {
 // IsExists
 func TestIsExists(t *testing.T) {
 	path := "/Users/steden/Desktop/code/project/Farseer.Go3"
-	log.Println(IsExists(path))
+	flog.Println(IsExists(path))
 }
 
 func TestOther(t *testing.T) {
 	git := "https://github.com/FarseerNet/farseer.go.git"
 	git = filepath.Base(git)
 	git = str.CutRight(git, ".git")
-	log.Println(git)
+	flog.Println(git)
 }

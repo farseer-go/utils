@@ -45,7 +45,7 @@ func GenerateId() int64 {
 
 func (s *snowflake) nextVal() int64 {
 	s.Lock()
-	now := time.Now().UnixMicro() // 毫秒
+	now := time.Now().UnixMilli() // 毫秒
 	if s.timestamp == now {
 		// 当同一时间戳（精度：毫秒）下多次生成id会增加序列号
 		s.sequence = (s.sequence + 1) & sequenceMask
