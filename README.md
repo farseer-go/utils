@@ -40,6 +40,3 @@
     * GetDesc（返回时间中文的描述）
     * GetSubDesc（返回时间中文的描述）
     * GetDate（获取当前日期）
-* snowflake（雪花算法）
-  * Init（全局初始化一次)
-  * GenerateId（生成唯一ID）
