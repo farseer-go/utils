@@ -8,7 +8,7 @@ import (
 )
 
 // 支持请求超时设置，单位：ms
-func httpRequest(methodName string, url string, head map[string]any, body any, contentType string, requestTimeout int) string {
+func httpRequest(methodName string, url string, head map[string]any, body any, contentType string, requestTimeout int) (string, error) {
 	client := fasthttp.Client{}
 
 	// request
@@ -40,7 +40,7 @@ func httpRequest(methodName string, url string, head map[string]any, body any, c
 	err := client.DoTimeout(request, response, timeout)
 
 	if err != nil {
-		panic(err.Error())
+		return "", err
 	}
-	return string(response.Body())
+	return string(response.Body()), nil
 }
