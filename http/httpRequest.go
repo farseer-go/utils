@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/parse"
 	"github.com/valyala/fasthttp"
 	"time"
@@ -40,6 +41,7 @@ func httpRequest(methodName string, url string, head map[string]any, body any, c
 	err := client.DoTimeout(request, response, timeout)
 
 	if err != nil {
+		flog.Errorf("%s request error:%s", url, err.Error())
 		return "", err
 	}
 	return string(response.Body()), nil
