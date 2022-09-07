@@ -17,3 +17,15 @@ func AddHttpsPrefix(url string) string {
 	}
 	return "https://" + url
 }
+
+// ClearHttpPrefix 清除http前缀
+func ClearHttpPrefix(url string) string {
+	var domain string
+	if strings.HasPrefix(url, "https") {
+		domain = strings.TrimPrefix(url, "https://")
+	} else {
+		domain = strings.TrimPrefix(url, "http://")
+	}
+
+	return strings.TrimRight(domain, "/")
+}

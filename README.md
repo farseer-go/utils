@@ -35,6 +35,7 @@
     * GetJson （Get方式将结果反序列化成TReturn）
     * AddHttpPrefix（添加http前缀）
     * AddHttpsPrefix（添加https前缀）
+    * ClearHttpPrefix（清除http前缀）
 * times（时间操作）
     * GetTime（根据time.Duration转换成天、小时、分钟、秒）
     * GetDesc（返回时间中文的描述）
