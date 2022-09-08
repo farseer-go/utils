@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/farseer-go/fs/flog"
 )
 
 // Post http post，支持请求超时设置，单位：ms
@@ -24,7 +25,10 @@ func PostJson[TReturn any](url string, head map[string]any, body any, requestTim
 	var val TReturn
 	rspJson, err := httpRequest("POST", url, head, body, "application/json", requestTimeout)
 	if err == nil {
-		_ = json.Unmarshal([]byte(rspJson), &val)
+		err = json.Unmarshal([]byte(rspJson), &val)
+		if err != nil {
+			flog.Errorf("%s json.Unmarshal error:%s", url, err.Error())
+		}
 	}
 	return val, err
 }
