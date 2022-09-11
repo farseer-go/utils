@@ -38,6 +38,7 @@ func httpRequest(methodName string, url string, head map[string]any, body any, c
 
 	response := fasthttp.AcquireResponse()
 	timeout := time.Duration(requestTimeout) * time.Millisecond
+	flog.AppInfof("httpRequest", "[%s] %s body:%s", methodName, url, string(bytesData))
 	err := client.DoTimeout(request, response, timeout)
 
 	if err != nil {
