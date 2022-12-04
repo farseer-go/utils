@@ -26,6 +26,7 @@ func NewClient(url string) *client {
 }
 
 // Head 设置头部
+// head：头部
 func (receiver *client) Head(head map[string]any) *client {
 	for k, v := range head {
 		receiver.head[k] = v
@@ -34,12 +35,15 @@ func (receiver *client) Head(head map[string]any) *client {
 }
 
 // HeadAdd 添加头部
+// key：Key
+// value：Value
 func (receiver *client) HeadAdd(key string, value any) *client {
 	receiver.head[key] = value
 	return receiver
 }
 
 // Body 设置Body
+// body：提交的内容
 func (receiver *client) Body(body any) *client {
 	receiver.body = body
 	return receiver
@@ -58,6 +62,7 @@ func (receiver *client) SetFormType() *client {
 }
 
 // Timeout 设置超时
+// requestTimeout：超时时间（ms）
 func (receiver *client) Timeout(requestTimeout int) *client {
 	receiver.requestTimeout = requestTimeout
 	return receiver

@@ -26,7 +26,7 @@ func GetDesc(ts time.Duration) string {
 	return parse.Convert(seconds, "0") + " 秒"
 }
 
-// GetSubDesc 返回时间中文的描述
+// GetSubDesc 两个时间相减，返回时间中文的描述
 //
 //	return "1 小时 32 分"
 func GetSubDesc(ts1 time.Time, ts2 time.Time) string {

@@ -4,7 +4,7 @@
         * GetFiles （读取指定目录下的文件）
         * CopyFolder （复制整个文件夹）
         * CopyFile （复制文件）
-        * ClearFile （清空目录下的所有文件）
+        * ClearFile （清空目录下的所有文件） 
         * IsExists （判断路径是否存在）
         * Delete （删除文件）
         * WriteString （写入文件）

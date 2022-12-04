@@ -37,6 +37,7 @@ func GetFiles(path string, searchPattern string, searchSubDir bool) []string {
 }
 
 // ClearFile 清空目录下的所有文件（但不删除path目录本身）
+// path：目录路径
 func ClearFile(path string) {
 	_ = filepath.WalkDir(path, func(filePath string, dirInfo fs.DirEntry, err error) error {
 		if path == filePath {
@@ -48,6 +49,7 @@ func ClearFile(path string) {
 }
 
 // IsExists 判断路径是否存在
+// path：目录路径
 func IsExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
