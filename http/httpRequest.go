@@ -27,7 +27,7 @@ func httpRequest(methodName string, url string, head map[string]any, body any, c
 
 	// request.contentType
 	if contentType != "" {
-		request.Header.Set("Content-Type", contentType)
+		request.Header.SetContentType(contentType)
 	}
 
 	if head != nil || len(head) > 0 {
