@@ -19,7 +19,7 @@ import (
 // workingDirectory：当前工作目录位置
 // return：exit code
 func RunShell(command string, receiveOutput chan string, environment map[string]string, workingDirectory string) int {
-	return RunShellContext(command, receiveOutput, environment, workingDirectory, context.Background())
+	return RunShellContext(context.Background(), command, receiveOutput, environment, workingDirectory)
 }
 
 // RunShellContext 执行shell命令
@@ -28,7 +28,7 @@ func RunShell(command string, receiveOutput chan string, environment map[string]
 // environment：环境变量
 // workingDirectory：当前工作目录位置
 // return：exit code
-func RunShellContext(command string, receiveOutput chan string, environment map[string]string, workingDirectory string, ctx context.Context) int {
+func RunShellContext(ctx context.Context, command string, receiveOutput chan string, environment map[string]string, workingDirectory string) int {
 	cmd := exec.CommandContext(ctx, "bash", "-c", command)
 	cmd.Dir = workingDirectory
 	// 如果设置了环境变量，则追回进来
@@ -54,7 +54,7 @@ func RunShellContext(command string, receiveOutput chan string, environment map[
 
 	if err != nil {
 		if ex, ok := err.(*exec.ExitError); ok {
-			res = ex.Sys().(syscall.WaitStatus).ExitStatus() //获取命令执行返回状态
+			res = ex.Sys().(syscall.WaitStatus).ExitStatus() // 获取命令执行返回状态
 		}
 		if !strings.Contains(err.Error(), "exit status") {
 			receiveOutput <- "wait:" + err.Error()
