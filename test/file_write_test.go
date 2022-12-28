@@ -10,7 +10,7 @@ import (
 )
 
 func TestWriteString(t *testing.T) {
-	file := "/Users/steden/Desktop/code/project/Farseer.Go/" + strconv.Itoa(rand.Intn(999-100)) + ".txt"
+	file := "./Farseer.Go/" + strconv.Itoa(rand.Intn(999-100)) + ".txt"
 	defer os.Remove(file)
 
 	content := "aaa"
@@ -19,7 +19,7 @@ func TestWriteString(t *testing.T) {
 }
 
 func TestAppendString(t *testing.T) {
-	file := "/Users/steden/Desktop/code/project/Farseer.Go/" + strconv.Itoa(rand.Intn(999-100)) + ".txt"
+	file := "./Farseer.Go/" + strconv.Itoa(rand.Intn(999-100)) + ".txt"
 	defer os.Remove(file)
 
 	file2.WriteString(file, "aaa")
@@ -29,7 +29,7 @@ func TestAppendString(t *testing.T) {
 }
 
 func TestAppendLine(t *testing.T) {
-	file := "/Users/steden/Desktop/code/project/Farseer.Go/" + strconv.Itoa(rand.Intn(999-100)) + ".txt"
+	file := "./Farseer.Go/" + strconv.Itoa(rand.Intn(999-100)) + ".txt"
 	defer os.Remove(file)
 
 	file2.WriteString(file, "aaa")
@@ -39,7 +39,7 @@ func TestAppendLine(t *testing.T) {
 }
 
 func TestAppendAllLine(t *testing.T) {
-	file := "/Users/steden/Desktop/code/project/Farseer.Go/" + strconv.Itoa(rand.Intn(999-100)) + ".txt"
+	file := "./Farseer.Go/" + strconv.Itoa(rand.Intn(999-100)) + ".txt"
 	defer os.Remove(file)
 
 	file2.WriteString(file, "aaa")
