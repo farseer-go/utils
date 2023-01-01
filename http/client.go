@@ -35,7 +35,7 @@ func (receiver *client) Head(head map[string]any) *client {
 }
 
 // HeadAdd 添加头部
-// key：Key
+// key：key
 // value：Value
 func (receiver *client) HeadAdd(key string, value any) *client {
 	receiver.head[key] = value
@@ -79,7 +79,7 @@ func (receiver *client) PostUnmarshal(val any) error {
 	if err == nil {
 		err = json.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
-			flog.Errorf("%s http.PostUnmarshal error:%s", receiver.url, err.Error())
+			return flog.Errorf("%s http.PostUnmarshal error:%s", receiver.url, err.Error())
 		}
 	}
 	return err
@@ -96,7 +96,7 @@ func (receiver *client) GetUnmarshal(val any) error {
 	if err == nil {
 		err = json.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
-			flog.Errorf("%s http.PostUnmarshal error:%s", receiver.url, err.Error())
+			return flog.Errorf("%s http.PostUnmarshal error:%s", receiver.url, err.Error())
 		}
 	}
 	return err
@@ -113,7 +113,7 @@ func (receiver *client) PutUnmarshal(val any) error {
 	if err == nil {
 		err = json.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
-			flog.Errorf("%s http.PostUnmarshal error:%s", receiver.url, err.Error())
+			return flog.Errorf("%s http.PostUnmarshal error:%s", receiver.url, err.Error())
 		}
 	}
 	return err
