@@ -40,7 +40,7 @@ func RunShellContext(ctx context.Context, command string, receiveOutput chan str
 
 	if err := cmd.Start(); err != nil {
 		receiveOutput <- "执行失败：" + err.Error()
-		return 0
+		return -1
 	}
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(2)
