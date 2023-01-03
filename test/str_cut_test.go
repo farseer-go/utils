@@ -8,4 +8,5 @@ import (
 
 func TestCutRight(t *testing.T) {
 	assert.Equal(t, str.CutRight("aaaacbb", "bb"), "aaaac")
+	assert.Equal(t, str.CutRight("bb", "cc"), "bb")
 }
