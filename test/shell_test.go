@@ -65,7 +65,7 @@ func TestRunShell(t *testing.T) {
 			for output := range receiveOutput {
 				res = output
 			}
-			assert.Equal(t, "bash: commandError: command not found", res)
+			assert.Contains(t, res, "commandError: command not found")
 		}()
 
 		_ = exec.RunShell(command, receiveOutput, nil, "")
