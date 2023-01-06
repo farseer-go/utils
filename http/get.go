@@ -10,8 +10,8 @@ func Get(url string, body any, contentType string, requestTimeout int) (string, 
 	return httpRequest("GET", url, nil, body, contentType, requestTimeout)
 }
 
-// GetForm http get，application/x-www-form-urlencoded
-func GetForm(url string, body any, requestTimeout int) (string, int, error) {
+// Get http get
+func Get(url string, body any, requestTimeout int) (string, int, error) {
 	return httpRequest("GET", url, nil, body, "application/x-www-form-urlencoded", requestTimeout)
 }
 

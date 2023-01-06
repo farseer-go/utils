@@ -19,23 +19,21 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 	// request
 	request := fasthttp.AcquireRequest()
 
-	// requestUrl
-	request.SetRequestURI(requestUrl)
-
-	switch b := body.(type) {
-	case string:
-		request.SetBodyString(b)
-	case url.Values:
-		request.SetBodyString(urlValuesToString(b, contentType))
-	case map[string]string:
-		request.SetBodyString(mapStringToString(b, contentType))
-	case map[string]any:
-		request.SetBodyString(mapAnyToString(b, contentType))
-	default:
-		// request.body
-		bytesData, _ := json.Marshal(body)
-		request.SetBody(bytesData)
-	}
+	if body != nil {
+		var bodyVal string
+		switch b := body.(type) {
+		case string:
+			bodyVal = b
+		case url.Values:
+			bodyVal = urlValuesToString(b, contentType)
+		case map[string]string:
+			bodyVal = mapStringToString(b, contentType)
+		case map[string]any:
+			bodyVal = mapAnyToString(b, contentType)
+		default:
+			bytesData, _ := json.Marshal(body)
+			bodyVal = string(bytesData)
+		}
 
 	// request.contentType
 	if contentType != "" {

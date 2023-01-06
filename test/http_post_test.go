@@ -9,7 +9,7 @@ import (
 )
 
 func TestPost(t *testing.T) {
-	data := make(map[string]interface{})
+	data := make(map[string]string)
 	data["name"] = "zhaofan"
 	data["age"] = "23"
 	res, statusCode, err := http.Post("https://httpbin.org/post", nil, data, "application/json", 5000)
@@ -18,7 +18,7 @@ func TestPost(t *testing.T) {
 	var val = make(map[string]interface{}, 0)
 	err = json.Unmarshal([]byte(res), &val)
 	assert.NoError(t, err)
-	assert.Equal(t, data, val["json"])
+	assert.Equal(t, data, val.Json)
 }
 
 func TestPostForm(t *testing.T) {
