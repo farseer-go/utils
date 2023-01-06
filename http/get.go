@@ -16,8 +16,8 @@ func GetForm(url string, body any, requestTimeout int) (string, error) {
 }
 
 // GetFormWithoutBody http get，application/x-www-form-urlencoded，
-func GetFormWithoutBody(url string, body any, requestTimeout int) (string, error) {
-	return httpRequest("GET", url, nil, body, "application/x-www-form-urlencoded", requestTimeout)
+func GetFormWithoutBody(url string, requestTimeout int) (string, error) {
+	return httpRequest("GET", url, nil, nil, "application/x-www-form-urlencoded", requestTimeout)
 }
 
 // GetJson Post方式将结果反序列化成TReturn
