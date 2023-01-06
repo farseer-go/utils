@@ -11,7 +11,7 @@ import (
 )
 
 // 支持请求超时设置，单位：ms
-func httpRequest(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int) (string, error) {
+func httpRequest(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int) (string, int, error) {
 	sw := stopwatch.StartNew()
 
 	client := fasthttp.Client{}
@@ -58,9 +58,9 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 	flog.ComponentInfof("httpRequest", "[%s] %s body:%v，耗时：%s", methodName, requestUrl, body, sw.GetMillisecondsText())
 
 	if err != nil {
-		return "", flog.Errorf("%s request error:%s", requestUrl, err.Error())
+		return "", 0, flog.Errorf("%s request error:%s", requestUrl, err.Error())
 	}
-	return string(response.Body()), nil
+	return string(response.Body()), response.StatusCode(), nil
 }
 
 func urlValuesToString(body url.Values, contentType string) string {

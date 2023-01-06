@@ -67,13 +67,13 @@ func (receiver *client) Timeout(requestTimeout int) *client {
 }
 
 // Post POST请求
-func (receiver *client) Post() (string, error) {
+func (receiver *client) Post() (string, int, error) {
 	return httpRequest("POST", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
 }
 
 // PostUnmarshal POST请求，并反序列成对象
 func (receiver *client) PostUnmarshal(val any) error {
-	rspJson, err := httpRequest("POST", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+	rspJson, _, err := httpRequest("POST", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
 	if err == nil {
 		err = json.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
@@ -84,13 +84,13 @@ func (receiver *client) PostUnmarshal(val any) error {
 }
 
 // Get GET方法请求
-func (receiver *client) Get() (string, error) {
+func (receiver *client) Get() (string, int, error) {
 	return httpRequest("GET", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
 }
 
 // GetUnmarshal GET方法请求，并反序列成对象
 func (receiver *client) GetUnmarshal(val any) error {
-	rspJson, err := httpRequest("GET", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+	rspJson, _, err := httpRequest("GET", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
 	if err == nil {
 		err = json.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
@@ -101,13 +101,13 @@ func (receiver *client) GetUnmarshal(val any) error {
 }
 
 // Put PUT方法请求
-func (receiver *client) Put() (string, error) {
+func (receiver *client) Put() (string, int, error) {
 	return httpRequest("PUT", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
 }
 
 // PutUnmarshal PUT方法请求，并反序列成对象
 func (receiver *client) PutUnmarshal(val any) error {
-	rspJson, err := httpRequest("PUT", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+	rspJson, _, err := httpRequest("PUT", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
 	if err == nil {
 		err = json.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
