@@ -15,7 +15,11 @@ func TestPost(t *testing.T) {
 	res, statusCode, err := http.Post("https://httpbin.org/post", nil, data, "application/json", 5000)
 	assert.NoError(t, err)
 	assert.Equal(t, fasthttp.StatusOK, statusCode)
-	var val = make(map[string]interface{}, 0)
+	type result struct {
+		Json map[string]string `json:"json"`
+	}
+
+	var val = result{}
 	err = json.Unmarshal([]byte(res), &val)
 	assert.NoError(t, err)
 	assert.Equal(t, data, val.Json)

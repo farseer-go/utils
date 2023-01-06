@@ -7,6 +7,7 @@ import (
 	"github.com/farseer-go/fs/stopwatch"
 	"github.com/valyala/fasthttp"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -34,6 +35,21 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 			bytesData, _ := json.Marshal(body)
 			bodyVal = string(bytesData)
 		}
+
+		if strings.ToUpper(methodName) == "GET" {
+			reqUrl, _ := url.Parse(requestUrl)
+			if len(reqUrl.RawQuery) > 0 {
+				reqUrl.RawQuery += "&" + bodyVal
+			} else {
+				reqUrl.RawQuery = bodyVal
+			}
+			requestUrl = reqUrl.String()
+		} else {
+			request.SetBodyString(bodyVal)
+		}
+	}
+
+	request.SetRequestURI(requestUrl)
 
 	// request.contentType
 	if contentType != "" {

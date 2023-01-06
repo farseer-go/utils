@@ -5,11 +5,6 @@ import (
 	_ "github.com/valyala/fasthttp"
 )
 
-// Get http get，支持请求超时设置，单位：ms
-func Get(url string, body any, contentType string, requestTimeout int) (string, int, error) {
-	return httpRequest("GET", url, nil, body, contentType, requestTimeout)
-}
-
 // Get http get
 func Get(url string, body any, requestTimeout int) (string, int, error) {
 	return httpRequest("GET", url, nil, body, "application/x-www-form-urlencoded", requestTimeout)
