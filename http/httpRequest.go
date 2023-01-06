@@ -92,7 +92,7 @@ func mapAnyToString(body map[string]any, contentType string) string {
 	} else {
 		val := make(url.Values)
 		for k, v := range body {
-			val.Add(k, v.(string))
+			val.Add(k, parse.Convert(v, ""))
 		}
 		return val.Encode()
 	}
