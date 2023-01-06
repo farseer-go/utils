@@ -21,14 +21,14 @@ func PostFormWithoutBody(url string, head map[string]any, requestTimeout int) (s
 }
 
 // PostJson Post方式将结果反序列化成TReturn
-func PostJson[TReturn any](url string, head map[string]any, body any, requestTimeout int) (TReturn, error) {
+func PostJson[TReturn any](url string, head map[string]any, body any, requestTimeout int) (TReturn, int, error) {
 	var val TReturn
-	rspJson, _, err := httpRequest("POST", url, head, body, "application/json", requestTimeout)
+	rspJson, statusCode, err := httpRequest("POST", url, head, body, "application/json", requestTimeout)
 	if err == nil {
 		err = json.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
 			_ = flog.Errorf("%s json.Unmarshal error:%s", url, err.Error())
 		}
 	}
-	return val, err
+	return val, statusCode, err
 }

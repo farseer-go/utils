@@ -1,13 +1,10 @@
 package test
 
 import (
-	"bytes"
 	"encoding/json"
-	"fmt"
 	"github.com/farseer-go/utils/http"
 	"github.com/stretchr/testify/assert"
-	"io"
-	goHttp "net/http"
+	"github.com/valyala/fasthttp"
 	"testing"
 )
 
@@ -15,8 +12,9 @@ func TestPost(t *testing.T) {
 	data := make(map[string]interface{})
 	data["name"] = "zhaofan"
 	data["age"] = "23"
-	res, err := http.Post("https://httpbin.org/post", nil, data, "application/json", 5000)
+	res, statusCode, err := http.Post("https://httpbin.org/post", nil, data, "application/json", 5000)
 	assert.NoError(t, err)
+	assert.Equal(t, fasthttp.StatusOK, statusCode)
 	var val = make(map[string]interface{}, 0)
 	err = json.Unmarshal([]byte(res), &val)
 	assert.NoError(t, err)
@@ -27,28 +25,38 @@ func TestPostForm(t *testing.T) {
 	data := make(map[string]interface{})
 	data["name"] = "zhaofan"
 	data["age"] = "23"
-	res, err := http.PostForm("https://httpbin.org/post", nil, data, 5000)
+	res, statusCode, err := http.PostForm("https://httpbin.org/post", nil, data, 5000)
 	assert.NoError(t, err)
+	assert.Equal(t, fasthttp.StatusOK, statusCode)
 	var val = make(map[string]interface{}, 0)
 	err = json.Unmarshal([]byte(res), &val)
 	assert.NoError(t, err)
-	t.Log(val)
-	t.Logf("%+v", data)
-	t.Logf("%+v", val["form"])
-	// for k, v := range val["form"] {
-	// 	t.Log(k, v)
-	// }
-	// assert.Equal(t, data, val["form"])
+	assert.Equal(t, data, val["form"])
 }
 
-func TestA(t *testing.T) {
-	client := &goHttp.Client{}
+func TestPostFormWithoutBody(t *testing.T) {
+	res, statusCode, err := http.PostFormWithoutBody("https://httpbin.org/post", nil, 5000)
+	assert.NoError(t, err)
+	assert.Equal(t, fasthttp.StatusOK, statusCode)
+	var val = make(map[string]interface{}, 0)
+	err = json.Unmarshal([]byte(res), &val)
+	assert.NoError(t, err)
+}
+
+func TestPostJson(t *testing.T) {
 	data := make(map[string]interface{})
 	data["name"] = "zhaofan"
 	data["age"] = "23"
-	bytesData, _ := json.Marshal(data)
-	req, _ := goHttp.NewRequest("POST", "http://httpbin.org/post", bytes.NewReader(bytesData))
-	resp, _ := client.Do(req)
-	body, _ := io.ReadAll(resp.Body)
-	fmt.Println(string(body))
+
+	type result struct {
+		Headers map[string]string `json:"headers"`
+		Origin  string            `json:"origin"`
+		Url     string            `json:"url"`
+		Json    map[string]any    `json:"json"`
+	}
+	res, statusCode, err := http.PostJson[result]("https://httpbin.org/post", nil, data, 5000)
+	assert.NoError(t, err)
+	assert.Equal(t, fasthttp.StatusOK, statusCode)
+	assert.Equal(t, data, res.Json)
+
 }
