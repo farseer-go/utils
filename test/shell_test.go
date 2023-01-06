@@ -58,15 +58,17 @@ func TestRunShell(t *testing.T) {
 		receiveOutput := make(chan string, 100)
 		var waitGroup sync.WaitGroup
 		waitGroup.Add(1)
+		command := "commandError"
 		go func() {
 			defer waitGroup.Done()
-
+			var res string
 			for output := range receiveOutput {
-				t.Log(output)
+				res = output
 			}
+			assert.Equal(t, "bash: commandError: command not found", res)
 		}()
 
-		_ = exec.RunShell("12312", receiveOutput, nil, "")
+		_ = exec.RunShell(command, receiveOutput, nil, "")
 		close(receiveOutput)
 		waitGroup.Wait()
 		// assert.Equal(t, 0, exitCode)
