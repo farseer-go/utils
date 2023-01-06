@@ -27,7 +27,7 @@ func PostJson[TReturn any](url string, head map[string]any, body any, requestTim
 	if err == nil {
 		err = json.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
-			flog.Errorf("%s json.Unmarshal error:%s", url, err.Error())
+			_ = flog.Errorf("%s json.Unmarshal error:%s", url, err.Error())
 		}
 	}
 	return val, err

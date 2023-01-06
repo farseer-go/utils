@@ -7,8 +7,6 @@ import (
 
 type client struct {
 	url            string
-	methodName     string
-	timeout        int
 	head           map[string]any
 	body           any
 	contentType    string
