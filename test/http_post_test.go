@@ -12,17 +12,31 @@ func TestPost(t *testing.T) {
 	data := make(map[string]string)
 	data["name"] = "zhaofan"
 	data["age"] = "23"
-	res, statusCode, err := http.Post("https://httpbin.org/post", nil, data, "application/json", 5000)
-	assert.NoError(t, err)
-	assert.Equal(t, fasthttp.StatusOK, statusCode)
 	type result struct {
 		Json map[string]string `json:"json"`
+		Form map[string]string `json:"form"`
 	}
+	t.Run("json", func(t *testing.T) {
+		res, statusCode, err := http.Post("https://httpbin.org/post", nil, data, "application/json", 5000)
+		assert.NoError(t, err)
+		assert.Equal(t, fasthttp.StatusOK, statusCode)
 
-	var val = result{}
-	err = json.Unmarshal([]byte(res), &val)
-	assert.NoError(t, err)
-	assert.Equal(t, data, val.Json)
+		var val = result{}
+		err = json.Unmarshal([]byte(res), &val)
+		assert.NoError(t, err)
+		assert.Equal(t, data, val.Json)
+	})
+
+	t.Run("form", func(t *testing.T) {
+		res, statusCode, err := http.Post("https://httpbin.org/post", nil, data, "application/x-www-form-urlencoded", 5000)
+		assert.NoError(t, err)
+		assert.Equal(t, fasthttp.StatusOK, statusCode)
+		var val = result{}
+		err = json.Unmarshal([]byte(res), &val)
+		assert.NoError(t, err)
+		assert.Equal(t, data, val.Form)
+	})
+
 }
 
 func TestPostForm(t *testing.T) {
