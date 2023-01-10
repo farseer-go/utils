@@ -9,7 +9,6 @@ import (
 // str:要加密的字符串
 // return:加密后的字符串
 func Md5(str string) string {
-	data := []byte(str)
-	sum := md5.Sum(data)
+	sum := md5.Sum([]byte(str))
 	return fmt.Sprintf("%x", sum) //将[]byte转成16进制
 }
