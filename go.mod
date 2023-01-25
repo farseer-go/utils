@@ -3,7 +3,7 @@ module github.com/farseer-go/utils
 go 1.19
 
 require (
-	github.com/farseer-go/fs v0.6.0
+	github.com/farseer-go/fs v0.6.1-0.20230125073549-bf337aa75be9
 	github.com/stretchr/testify v1.8.1
 	github.com/valyala/fasthttp v1.38.0
 )
