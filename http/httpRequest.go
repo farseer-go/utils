@@ -25,6 +25,8 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 		switch b := body.(type) {
 		case string:
 			bodyVal = b
+		case []byte:
+			bodyVal = string(b)
 		case url.Values:
 			bodyVal = urlValuesToString(b, contentType)
 		case map[string]string:
