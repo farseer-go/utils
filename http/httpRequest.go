@@ -74,7 +74,7 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 	flog.ComponentInfof("httpRequest", "[%s] %s body:%v，耗时：%s", methodName, requestUrl, body, sw.GetMillisecondsText())
 
 	if err != nil {
-		return "", 0, flog.Errorf("%s request error:%s", requestUrl, err.Error())
+		return "", 0, err
 	}
 	return string(response.Body()), response.StatusCode(), nil
 }
