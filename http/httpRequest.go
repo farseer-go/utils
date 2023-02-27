@@ -16,7 +16,9 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 	sw := stopwatch.StartNew()
 
 	client := fasthttp.Client{}
-
+	client.RetryIf = func(request *fasthttp.Request) bool {
+		return false
+	}
 	// request
 	request := fasthttp.AcquireRequest()
 
@@ -66,8 +68,11 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 
 	// Method
 	request.Header.SetMethod(methodName)
-
 	response := fasthttp.AcquireResponse()
+	defer fasthttp.ReleaseRequest(request)
+	defer fasthttp.ReleaseResponse(response)
+	defer request.SetConnectionClose()
+
 	timeout := time.Duration(requestTimeout) * time.Millisecond
 	err := client.DoTimeout(request, response, timeout)
 
