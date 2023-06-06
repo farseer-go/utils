@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/farseer-go/fs v0.7.0
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 	github.com/valyala/fasthttp v1.38.0
 )
 
