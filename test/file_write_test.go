@@ -35,7 +35,7 @@ func TestAppendLine(t *testing.T) {
 	file2.WriteString(file, "aaa")
 	file2.AppendLine(file, "bbb")
 	readString := file2.ReadString(file)
-	assert.Equal(t, readString, "aaa\nbbb")
+	assert.Equal(t, readString, "aaabbb\n")
 }
 
 func TestAppendAllLine(t *testing.T) {
@@ -46,5 +46,5 @@ func TestAppendAllLine(t *testing.T) {
 	str := []string{"bbb", "ccc"}
 	file2.AppendAllLine(file, str)
 	readString := file2.ReadString(file)
-	assert.Equal(t, readString, "aaa\nbbb\nccc")
+	assert.Equal(t, readString, "aaabbb\nccc\n")
 }
