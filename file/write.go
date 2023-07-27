@@ -1,6 +1,7 @@
 package file
 
 import (
+	"bufio"
 	"os"
 	"strings"
 )
@@ -16,22 +17,30 @@ func WriteString(filePath string, content string) {
 // filePath：文件路径
 // content：文件内容
 func AppendString(filePath string, content string) {
-	oldContent := ReadString(filePath)
-	_ = os.WriteFile(filePath, []byte(oldContent+content), 0766)
+	// 写日志到文件
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		return
+	}
+	// 写入文件时，使用带缓存的 *Writer
+	write := bufio.NewWriter(file)
+	_, _ = write.WriteString(content)
+	//Flush将缓存的文件真正写入到文件中
+	_ = write.Flush()
+	//及时关闭file句柄
+	_ = file.Close()
 }
 
 // AppendLine 换行追加文件
 // filePath：文件路径
 // content：文件内容
 func AppendLine(filePath string, content string) {
-	oldContent := ReadString(filePath)
-	_ = os.WriteFile(filePath, []byte(oldContent+"\n"+content), 0766)
+	AppendString(filePath, content+"\n")
 }
 
 // AppendAllLine 换行追加文件
 // filePath：文件路径
 // contents：文件内容
 func AppendAllLine(filePath string, contents []string) {
-	oldContent := ReadString(filePath)
-	_ = os.WriteFile(filePath, []byte(oldContent+"\n"+strings.Join(contents, "\n")), 0766)
+	AppendString(filePath, strings.Join(contents, "\n")+"\n")
 }
