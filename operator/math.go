@@ -19,6 +19,10 @@ func GetSum(num int) int {
 
 // GetTail 取尾数
 func GetTail(num int) int {
+	//如果数值是个位数直接返回当前数值
+	if num < 10 {
+		return num
+	}
 	strNum := parse.Convert(num, "")
 	if len(strNum) == 0 {
 		return 0
