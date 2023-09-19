@@ -72,16 +72,22 @@ func (receiver *client) Post() (string, int, error) {
 }
 
 // PostUnmarshal POST请求，并反序列成对象
-func (receiver *client) PostUnmarshal(val any) error {
-	rspJson, _, err := httpRequest("POST", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+func (receiver *client) PostUnmarshal(val any) (int, error) {
+	rspJson, statusCode, err := httpRequest("POST", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+
+	if statusCode >= 400 {
+		flog.Warningf("%s %d http.PostUnmarshal", receiver.url, statusCode)
+		return statusCode, err
+	}
+
 	if err == nil {
 		err = json.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
 			flog.Warningf("%s http.PostUnmarshal error:%s", receiver.url, err.Error())
-			return err
+			return statusCode, err
 		}
 	}
-	return err
+	return statusCode, err
 }
 
 // Get GET方法请求
@@ -90,16 +96,21 @@ func (receiver *client) Get() (string, int, error) {
 }
 
 // GetUnmarshal GET方法请求，并反序列成对象
-func (receiver *client) GetUnmarshal(val any) error {
-	rspJson, _, err := httpRequest("GET", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+func (receiver *client) GetUnmarshal(val any) (int, error) {
+	rspJson, statusCode, err := httpRequest("GET", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+
+	if statusCode >= 400 {
+		flog.Warningf("%s %d http.GetUnmarshal", receiver.url, statusCode)
+	}
+
 	if err == nil {
 		err = json.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
-			flog.Warningf("%s http.PostUnmarshal error:%s", receiver.url, err.Error())
-			return err
+			flog.Warningf("%s http.GetUnmarshal error:%s", receiver.url, err.Error())
+			return statusCode, err
 		}
 	}
-	return err
+	return statusCode, err
 }
 
 // Put PUT方法请求
@@ -108,14 +119,18 @@ func (receiver *client) Put() (string, int, error) {
 }
 
 // PutUnmarshal PUT方法请求，并反序列成对象
-func (receiver *client) PutUnmarshal(val any) error {
-	rspJson, _, err := httpRequest("PUT", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+func (receiver *client) PutUnmarshal(val any) (int, error) {
+	rspJson, statusCode, err := httpRequest("PUT", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+	if statusCode >= 400 {
+		flog.Warningf("%s %d http.PutUnmarshal", receiver.url, statusCode)
+	}
+
 	if err == nil {
 		err = json.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
-			flog.Warningf("%s http.PostUnmarshal error:%s", receiver.url, err.Error())
-			return err
+			flog.Warningf("%s http.PutUnmarshal error:%s", receiver.url, err.Error())
+			return statusCode, err
 		}
 	}
-	return err
+	return statusCode, err
 }
