@@ -29,3 +29,10 @@ func ClearHttpPrefix(url string) string {
 
 	return strings.TrimRight(domain, "/")
 }
+
+// GetDomain 从URL中获取Domain部份
+func GetDomain(url string) string {
+	domain := strings.TrimPrefix(url, "https://")
+	domain = strings.TrimPrefix(url, "https//")
+	return strings.Split(domain, "/")[0]
+}
