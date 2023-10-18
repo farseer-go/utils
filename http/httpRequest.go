@@ -2,9 +2,8 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/parse"
-	"github.com/farseer-go/fs/stopwatch"
+	"github.com/farseer-go/linkTrace"
 	"github.com/valyala/fasthttp"
 	"net/url"
 	"strings"
@@ -13,7 +12,7 @@ import (
 
 // 支持请求超时设置，单位：ms
 func httpRequest(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int) (string, int, error) {
-	sw := stopwatch.StartNew()
+	traceDetailHttp := linkTrace.TraceHttp(methodName, requestUrl)
 
 	client := fasthttp.Client{}
 	client.RetryIf = func(request *fasthttp.Request) bool {
@@ -60,6 +59,13 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 		request.Header.SetContentType(contentType)
 	}
 
+	// 链路追踪
+	if trace := linkTrace.GetCurTrace(); trace != nil {
+		if head == nil {
+			head = make(map[string]any)
+		}
+		head["TraceId"] = trace.TraceId
+	}
 	if head != nil || len(head) > 0 {
 		for k, v := range head {
 			request.Header.Set(k, parse.Convert(v, ""))
@@ -75,8 +81,7 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 
 	timeout := time.Duration(requestTimeout) * time.Millisecond
 	err := client.DoTimeout(request, response, timeout)
-
-	flog.ComponentInfof("httpRequest", "[%s] %s body:%v，耗时：%s", methodName, requestUrl, body, sw.GetMillisecondsText())
+	defer func() { traceDetailHttp.End(err) }()
 
 	if err != nil {
 		return "", 0, err
