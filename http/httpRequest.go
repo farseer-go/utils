@@ -2,8 +2,9 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/parse"
-	"github.com/farseer-go/linkTrace"
+	"github.com/farseer-go/fs/trace"
 	"github.com/valyala/fasthttp"
 	"net/url"
 	"strings"
@@ -12,7 +13,7 @@ import (
 
 // 支持请求超时设置，单位：ms
 func httpRequest(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int) (string, int, error) {
-	traceDetailHttp := linkTrace.TraceHttp(methodName, requestUrl)
+	traceDetailHttp := container.Resolve[trace.IManager]().TraceHttp(methodName, requestUrl)
 
 	client := fasthttp.Client{}
 	client.RetryIf = func(request *fasthttp.Request) bool {
@@ -60,11 +61,11 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 	}
 
 	// 链路追踪
-	if trace := linkTrace.GetCurTrace(); trace != nil {
+	if traceContext := container.Resolve[trace.IManager]().GetCurTrace(); traceContext != nil {
 		if head == nil {
 			head = make(map[string]any)
 		}
-		head["TraceId"] = trace.TraceId
+		head["TraceId"] = traceContext.GetTraceId()
 	}
 	if head != nil || len(head) > 0 {
 		for k, v := range head {
