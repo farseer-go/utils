@@ -1,7 +1,7 @@
 package file
 
 import (
-	"github.com/farseer-go/fs"
+	"github.com/farseer-go/fs/path"
 	"os"
 	"strings"
 )
@@ -17,5 +17,5 @@ func ReadString(filePath string) string {
 // filePath：文件路径
 func ReadAllLines(filePath string) []string {
 	file, _ := os.ReadFile(filePath)
-	return strings.Split(string(file), fs.Newline)
+	return strings.Split(string(file), path.Newline)
 }
