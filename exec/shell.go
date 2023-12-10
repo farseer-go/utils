@@ -29,6 +29,7 @@ func RunShell(command string, receiveOutput chan string, environment map[string]
 // workingDirectory：当前工作目录位置
 // return：exit code
 func RunShellContext(ctx context.Context, command string, receiveOutput chan string, environment map[string]string, workingDirectory string) int {
+	receiveOutput <- command
 	cmd := exec.CommandContext(ctx, "bash", "-c", command)
 	cmd.Dir = workingDirectory
 	// 如果设置了环境变量，则追回进来
