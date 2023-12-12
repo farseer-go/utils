@@ -1,6 +1,7 @@
 package http
 
 import (
+	"crypto/tls"
 	"encoding/json"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/parse"
@@ -15,10 +16,6 @@ import (
 func httpRequest(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int) (string, int, error) {
 	traceDetailHttp := container.Resolve[trace.IManager]().TraceHttp(methodName, requestUrl)
 
-	client := fasthttp.Client{}
-	client.RetryIf = func(request *fasthttp.Request) bool {
-		return false
-	}
 	// request
 	request := fasthttp.AcquireRequest()
 
@@ -81,7 +78,15 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 	defer request.SetConnectionClose()
 
 	timeout := time.Duration(requestTimeout) * time.Millisecond
-	err := client.DoTimeout(request, response, timeout)
+
+	fastHttpClient := fasthttp.Client{
+		TLSConfig: &tls.Config{
+			// 指定不校验 SSL/TLS 证书
+			InsecureSkipVerify: true,
+		},
+		RetryIf: func(request *fasthttp.Request) bool { return false },
+	}
+	err := fastHttpClient.DoTimeout(request, response, timeout)
 	defer func() { traceDetailHttp.End(err) }()
 
 	if err != nil {
