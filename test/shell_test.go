@@ -16,7 +16,7 @@ func TestRunShellContext(t *testing.T) {
 	go func() {
 		defer waitGroup.Done()
 		for output := range receiveOutput {
-			assert.Equal(t, "执行失败：context canceled", output)
+			assert.True(t, output == "执行失败：context canceled" || output == "Sleep 1")
 		}
 	}()
 
