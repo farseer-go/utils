@@ -3,6 +3,7 @@ package http
 import (
 	"crypto/tls"
 	"encoding/json"
+	"github.com/farseer-go/fs"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/parse"
 	"github.com/farseer-go/fs/trace"
@@ -59,10 +60,8 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 
 	// 链路追踪
 	if traceContext := container.Resolve[trace.IManager]().GetCurTrace(); traceContext != nil {
-		if head == nil {
-			head = make(map[string]any)
-		}
-		head["TraceId"] = traceContext.GetTraceId()
+		request.Header.Set("Trace-Id", parse.ToString(traceContext.GetTraceId()))
+		request.Header.Set("Trace-App-Name", fs.AppName)
 	}
 	if head != nil || len(head) > 0 {
 		for k, v := range head {
