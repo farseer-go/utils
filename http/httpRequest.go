@@ -69,7 +69,7 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 		}
 	}
 
-	// WebMethod
+	// Method
 	request.Header.SetMethod(methodName)
 	response := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseRequest(request)
