@@ -20,8 +20,8 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 	// request
 	request := fasthttp.AcquireRequest()
 
+	var bodyVal string
 	if body != nil {
-		var bodyVal string
 		switch b := body.(type) {
 		case string:
 			bodyVal = b
@@ -45,6 +45,7 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 			} else {
 				reqUrl.RawQuery = bodyVal
 			}
+			bodyVal = ""
 			requestUrl = reqUrl.String()
 		} else {
 			request.SetBodyString(bodyVal)
@@ -60,9 +61,13 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 
 	// 链路追踪
 	if traceContext := container.Resolve[trace.IManager]().GetCurTrace(); traceContext != nil {
-		request.Header.Set("Trace-Id", parse.ToString(traceContext.GetTraceId()))
-		request.Header.Set("Trace-App-Name", fs.AppName)
+		if head == nil {
+			head = make(map[string]any)
+		}
+		head["Trace-Id"] = traceContext.GetTraceId()
+		head["Trace-App-Name"] = fs.AppName
 	}
+
 	if head != nil || len(head) > 0 {
 		for k, v := range head {
 			request.Header.Set(k, parse.Convert(v, ""))
@@ -86,6 +91,9 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 		RetryIf: func(request *fasthttp.Request) bool { return false },
 	}
 	err := fastHttpClient.DoTimeout(request, response, timeout)
+
+	// 链路追踪设置出入参
+	traceDetailHttp.SetHttpRequest(requestUrl, head, bodyVal, string(response.Body()), response.StatusCode())
 	defer func() { traceDetailHttp.End(err) }()
 
 	if err != nil {
