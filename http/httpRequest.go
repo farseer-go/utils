@@ -65,6 +65,7 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 			head = make(map[string]any)
 		}
 		head["Trace-Id"] = traceContext.GetTraceId()
+		head["Trace-Level"] = traceContext.GetTraceLevel()
 		head["Trace-App-Name"] = core.AppName
 	}
 
