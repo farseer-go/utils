@@ -8,6 +8,7 @@ import (
 	"github.com/farseer-go/fs/parse"
 	"github.com/farseer-go/fs/trace"
 	"github.com/valyala/fasthttp"
+	"github.com/valyala/fasthttp/fasthttpproxy"
 	"net/url"
 	"strings"
 	"time"
@@ -15,6 +16,11 @@ import (
 
 // 支持请求超时设置，单位：ms
 func httpRequest(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int) (string, int, error) {
+	return RequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, "")
+}
+
+// RequestProxy 支持请求超时设置，单位：ms
+func RequestProxy(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int, proxyAddr string) (string, int, error) {
 	traceDetailHttp := container.Resolve[trace.IManager]().TraceHttp(methodName, requestUrl)
 
 	// request
@@ -90,6 +96,10 @@ func httpRequest(methodName string, requestUrl string, head map[string]any, body
 			InsecureSkipVerify: true,
 		},
 		RetryIf: func(request *fasthttp.Request) bool { return false },
+	}
+	// 设置代理
+	if proxyAddr != "" {
+		fastHttpClient.Dial = fasthttpproxy.FasthttpSocksDialer(proxyAddr)
 	}
 	err := fastHttpClient.DoTimeout(request, response, timeout)
 
