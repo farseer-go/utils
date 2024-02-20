@@ -103,14 +103,16 @@ func RequestProxy(methodName string, requestUrl string, head map[string]any, bod
 	}
 	err := fastHttpClient.DoTimeout(request, response, timeout)
 
+	bodyBytes := response.Body()
+	
 	// 链路追踪设置出入参
-	traceDetailHttp.SetHttpRequest(requestUrl, head, bodyVal, string(response.Body()), response.StatusCode())
+	traceDetailHttp.SetHttpRequest(requestUrl, head, bodyVal, string(bodyBytes), response.StatusCode())
 	defer func() { traceDetailHttp.End(err) }()
 
 	if err != nil {
 		return "", 0, err
 	}
-	return string(response.Body()), response.StatusCode(), nil
+	return string(bodyBytes), response.StatusCode(), nil
 }
 
 func urlValuesToString(body url.Values, contentType string) string {
