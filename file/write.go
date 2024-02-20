@@ -13,6 +13,13 @@ func WriteString(filePath string, content string) {
 	_ = os.WriteFile(filePath, []byte(content), 0766)
 }
 
+// WriteByte 写入文件
+// filePath：文件路径
+// content：文件内容
+func WriteByte(filePath string, content []byte) {
+	_ = os.WriteFile(filePath, content, 0766)
+}
+
 // AppendString 追加文件
 // filePath：文件路径
 // content：文件内容
