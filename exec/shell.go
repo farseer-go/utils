@@ -12,14 +12,25 @@ import (
 	"syscall"
 )
 
+// RunShellCommand 执行shell命令
+// command：要执行的命令
+// environment：环境变量
+// workingDirectory：当前工作目录位置
+// return：exit code
+func RunShellCommand(command string, environment map[string]string, workingDirectory string, outputCmd bool) (int, chan string) {
+	receiveOutput := make(chan string, 1000)
+	result := RunShellContext(context.Background(), command, receiveOutput, environment, workingDirectory, outputCmd)
+	return result, receiveOutput
+}
+
 // RunShell 执行shell命令
 // command：要执行的命令
 // receiveOutput：输出流
 // environment：环境变量
 // workingDirectory：当前工作目录位置
 // return：exit code
-func RunShell(command string, receiveOutput chan string, environment map[string]string, workingDirectory string) int {
-	return RunShellContext(context.Background(), command, receiveOutput, environment, workingDirectory)
+func RunShell(command string, receiveOutput chan string, environment map[string]string, workingDirectory string, outputCmd bool) int {
+	return RunShellContext(context.Background(), command, receiveOutput, environment, workingDirectory, outputCmd)
 }
 
 // RunShellContext 执行shell命令
@@ -28,8 +39,10 @@ func RunShell(command string, receiveOutput chan string, environment map[string]
 // environment：环境变量
 // workingDirectory：当前工作目录位置
 // return：exit code
-func RunShellContext(ctx context.Context, command string, receiveOutput chan string, environment map[string]string, workingDirectory string) int {
-	receiveOutput <- command
+func RunShellContext(ctx context.Context, command string, receiveOutput chan string, environment map[string]string, workingDirectory string, outputCmd bool) int {
+	if outputCmd {
+		receiveOutput <- command
+	}
 	cmd := exec.CommandContext(ctx, "bash", "-c", command)
 	cmd.Dir = workingDirectory
 	// 如果设置了环境变量，则追回进来
