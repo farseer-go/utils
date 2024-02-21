@@ -3,6 +3,7 @@ package exec
 import (
 	"bufio"
 	"context"
+	"github.com/farseer-go/collections"
 	"github.com/farseer-go/utils/str"
 	"io"
 	"os"
@@ -17,10 +18,10 @@ import (
 // environment：环境变量
 // workingDirectory：当前工作目录位置
 // return：exit code
-func RunShellCommand(command string, environment map[string]string, workingDirectory string, outputCmd bool) (int, chan string) {
+func RunShellCommand(command string, environment map[string]string, workingDirectory string, outputCmd bool) (int, []string) {
 	receiveOutput := make(chan string, 1000)
 	result := RunShellContext(context.Background(), command, receiveOutput, environment, workingDirectory, outputCmd)
-	return result, receiveOutput
+	return result, collections.NewListFromChan(receiveOutput).ToArray()
 }
 
 // RunShell 执行shell命令
@@ -86,7 +87,7 @@ func readInputStream(out io.ReadCloser, receiveOutput chan string, waitGroup *sy
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
-			if io.EOF != err || err.Error() != "read |0: file already closed" {
+			if io.EOF != err && err.Error() != "read |0: file already closed" {
 				receiveOutput <- err.Error()
 			}
 			break
