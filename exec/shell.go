@@ -86,7 +86,7 @@ func readInputStream(out io.ReadCloser, receiveOutput chan string, waitGroup *sy
 	for {
 		line, err := reader.ReadString('\n')
 		if err != nil {
-			if io.EOF != err {
+			if io.EOF != err || err.Error() != "read |0: file already closed" {
 				receiveOutput <- err.Error()
 			}
 			break
