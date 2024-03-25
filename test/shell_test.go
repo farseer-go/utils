@@ -22,7 +22,7 @@ func TestRunShellContext(t *testing.T) {
 
 	go func() {
 		defer waitGroup.Done()
-		exitCode := exec.RunShellContext(ctx, "Sleep 1", receiveOutput, nil, "")
+		exitCode := exec.RunShellContext(ctx, "Sleep 1", receiveOutput, nil, "", false)
 		close(receiveOutput)
 		assert.Equal(t, -1, exitCode)
 	}()
@@ -49,7 +49,7 @@ func TestRunShell(t *testing.T) {
 			}
 			assert.True(t, exist)
 		}()
-		exitCode := exec.RunShell("env", receiveOutput, env, "")
+		exitCode := exec.RunShell("env", receiveOutput, env, "", false)
 		close(receiveOutput)
 		assert.Equal(t, 0, exitCode)
 		waitGroup.Wait()
@@ -68,7 +68,7 @@ func TestRunShell(t *testing.T) {
 			assert.Contains(t, res, "commandError: command not found")
 		}()
 
-		_ = exec.RunShell(command, receiveOutput, nil, "")
+		_ = exec.RunShell(command, receiveOutput, nil, "", false)
 		close(receiveOutput)
 		waitGroup.Wait()
 		// assert.Equal(t, 0, exitCode)
