@@ -2,7 +2,6 @@ package system
 
 import (
 	"fmt"
-	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/net"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
