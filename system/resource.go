@@ -2,6 +2,7 @@ package system
 
 import (
 	"fmt"
+	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/net"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
@@ -38,6 +39,12 @@ func GetResource() *resource {
 	memory, _ := mem.VirtualMemory()
 	hostInfo, _ := host.Info()
 	diskUsage, _ := disk.Usage("/")
+	if len(infoStats) == 0 {
+		infoStats = []cpu.InfoStat{cpu.InfoStat{}}
+	}
+	if len(info) == 0 {
+		info = []float64{float64(0)}
+	}
 	return &resource{
 		OS:                 hostInfo.OS,
 		Processes:          hostInfo.Procs,
