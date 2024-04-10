@@ -24,6 +24,6 @@ func GetTail(num int) int {
 
 // GetHead 取数字第一位数
 func GetHead(num int) int {
-	strNum := parse.Convert(num, "")
-	return parse.ToInt(strNum[0])
+	n:=string(parse.ToString(num)[0])
+	return parse.ToInt(n)
 }
