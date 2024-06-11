@@ -10,6 +10,7 @@ require (
 	github.com/valyala/fasthttp v1.51.0
 )
 
+exclude github.com/timandy/routine v1.1.3
 require (
 	github.com/andybalholm/brotli v1.0.5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
