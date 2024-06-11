@@ -3,6 +3,7 @@ module github.com/farseer-go/utils
 go 1.19
 
 require (
+	github.com/farseer-go/collections v0.13.0
 	github.com/farseer-go/fs v0.13.0
 	github.com/shirou/gopsutil/v3 v3.23.10
 	github.com/stretchr/testify v1.8.4
@@ -23,6 +24,8 @@ require (
 	github.com/tklauser/numcpus v0.6.1 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
+	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
+	golang.org/x/text v0.13.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
