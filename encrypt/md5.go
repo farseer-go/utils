@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-// Md5 对字符串做MD5加密
+// Md5 对字符串做MD5加密（32位）
 // str:要加密的字符串
 // return:加密后的字符串
 func Md5(str string) string {
