@@ -16,11 +16,12 @@ import (
 
 // 支持请求超时设置，单位：ms
 func httpRequest(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int) (string, int, error) {
-	return RequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, "")
+	rspBody, statusCode, _, err := RequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, "")
+	return rspBody, statusCode, err
 }
 
 // RequestProxy 支持请求超时设置，单位：ms
-func RequestProxy(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int, proxyAddr string) (string, int, error) {
+func RequestProxy(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int, proxyAddr string) (string, int, map[string]string, error) {
 	traceDetailHttp := container.Resolve[trace.IManager]().TraceHttp(methodName, requestUrl)
 
 	// request
@@ -88,8 +89,6 @@ func RequestProxy(methodName string, requestUrl string, head map[string]any, bod
 	defer fasthttp.ReleaseResponse(response)
 	defer request.SetConnectionClose()
 
-	timeout := time.Duration(requestTimeout) * time.Millisecond
-
 	fastHttpClient := fasthttp.Client{
 		TLSConfig: &tls.Config{
 			// 指定不校验 SSL/TLS 证书
@@ -101,18 +100,31 @@ func RequestProxy(methodName string, requestUrl string, head map[string]any, bod
 	if proxyAddr != "" {
 		fastHttpClient.Dial = fasthttpproxy.FasthttpSocksDialer(proxyAddr)
 	}
-	err := fastHttpClient.DoTimeout(request, response, timeout)
+	var err error
+	if requestTimeout > 0 {
+		err = fastHttpClient.DoTimeout(request, response, time.Duration(requestTimeout)*time.Millisecond)
+	} else {
+		fastHttpClient.Do(request, response)
+	}
 
+	// 响应头部
+	responseHeader := make(map[string]string)
 	bodyBytes := response.Body()
-	
+	for _, keyBytes := range response.Header.PeekKeys() {
+		responseHeader[string(keyBytes)] = string(response.Header.PeekBytes(keyBytes))
+	}
+	response.Header.VisitAllCookie(func(key, value []byte) {
+		responseHeader[string(key)] = string(value)
+	})
+
 	// 链路追踪设置出入参
-	traceDetailHttp.SetHttpRequest(requestUrl, head, bodyVal, string(bodyBytes), response.StatusCode())
+	traceDetailHttp.SetHttpRequest(requestUrl, head, responseHeader, bodyVal, string(bodyBytes), response.StatusCode())
 	defer func() { traceDetailHttp.End(err) }()
 
 	if err != nil {
-		return "", 0, err
+		return "", 0, nil, err
 	}
-	return string(bodyBytes), response.StatusCode(), nil
+	return string(bodyBytes), response.StatusCode(), responseHeader, nil
 }
 
 func urlValuesToString(body url.Values, contentType string) string {
