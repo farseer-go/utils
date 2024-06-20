@@ -9,6 +9,7 @@ import (
 	"github.com/farseer-go/fs/trace"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpproxy"
+	"golang.org/x/text/encoding/traditionalchinese"
 	"net/url"
 	"strings"
 	"time"
@@ -109,22 +110,42 @@ func RequestProxy(methodName string, requestUrl string, head map[string]any, bod
 
 	// 响应头部
 	responseHeader := make(map[string]string)
-	bodyBytes := response.Body()
 	for _, keyBytes := range response.Header.PeekKeys() {
 		responseHeader[string(keyBytes)] = string(response.Header.PeekBytes(keyBytes))
 	}
+	// cookies
 	response.Header.VisitAllCookie(func(key, value []byte) {
 		responseHeader[string(key)] = string(value)
 	})
+	responseHeader["Content-Type"] = string(response.Header.ContentType())
+
+	// 找到对应的响应编码
+	charset := ""
+	for _, ctypes := range strings.Split(responseHeader["Content-Type"], ";") {
+		ctype := strings.Split(ctypes, "=")
+		if strings.TrimSpace(ctype[0]) == "charset" {
+			charset = strings.TrimSpace(ctype[1])
+			break
+		}
+	}
+
+	var bodyContent string
+	switch strings.ToLower(charset) {
+	case "big5":
+		bodyBytes, _ := traditionalchinese.Big5.NewDecoder().Bytes(response.Body())
+		bodyContent = string(bodyBytes)
+	default:
+		bodyContent = string(response.Body())
+	}
 
 	// 链路追踪设置出入参
-	traceDetailHttp.SetHttpRequest(requestUrl, head, responseHeader, bodyVal, string(bodyBytes), response.StatusCode())
+	traceDetailHttp.SetHttpRequest(requestUrl, head, responseHeader, bodyVal, bodyContent, response.StatusCode())
 	defer func() { traceDetailHttp.End(err) }()
 
 	if err != nil {
 		return "", 0, nil, err
 	}
-	return string(bodyBytes), response.StatusCode(), responseHeader, nil
+	return bodyContent, response.StatusCode(), responseHeader, nil
 }
 
 func urlValuesToString(body url.Values, contentType string) string {
