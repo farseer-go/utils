@@ -105,7 +105,7 @@ func RequestProxy(methodName string, requestUrl string, head map[string]any, bod
 	if requestTimeout > 0 {
 		err = fastHttpClient.DoTimeout(request, response, time.Duration(requestTimeout)*time.Millisecond)
 	} else {
-		fastHttpClient.Do(request, response)
+		err = fastHttpClient.Do(request, response)
 	}
 
 	// 响应头部

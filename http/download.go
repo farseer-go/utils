@@ -3,6 +3,7 @@ package http
 import (
 	"crypto/tls"
 	"fmt"
+	"github.com/farseer-go/fs/parse"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpproxy"
 	"os"
@@ -10,7 +11,7 @@ import (
 )
 
 // Download 下载文件到本地
-func Download(url string, savePath string, requestTimeout int, proxyAddr string) error {
+func Download(url string, savePath string, head map[string]any, requestTimeout int, proxyAddr string) (map[string]string, error) {
 	// request
 	request := fasthttp.AcquireRequest()
 
@@ -35,7 +36,11 @@ func Download(url string, savePath string, requestTimeout int, proxyAddr string)
 		fastHttpClient.Dial = fasthttpproxy.FasthttpSocksDialer(proxyAddr)
 	}
 
-	request.Header.Add("User-Agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36")
+	if head != nil || len(head) > 0 {
+		for k, v := range head {
+			request.Header.Set(k, parse.Convert(v, ""))
+		}
+	}
 
 	// 请求
 	var err error
@@ -45,13 +50,24 @@ func Download(url string, savePath string, requestTimeout int, proxyAddr string)
 		err = fastHttpClient.Do(request, response)
 	}
 	if err != nil {
-		return err
+		return nil, err
 	}
+
+	// 响应头部
+	responseHeader := make(map[string]string)
+	for _, keyBytes := range response.Header.PeekKeys() {
+		responseHeader[string(keyBytes)] = string(response.Header.PeekBytes(keyBytes))
+	}
+	// cookies
+	response.Header.VisitAllCookie(func(key, value []byte) {
+		responseHeader[string(key)] = string(value)
+	})
+	responseHeader["Content-Type"] = string(response.Header.ContentType())
 
 	statusCode := response.StatusCode()
 	if statusCode == 301 || statusCode == 302 || statusCode == 303 {
 		location := string(response.Header.Peek("Location"))
-		return Download(location, savePath, requestTimeout, proxyAddr)
+		return Download(location, savePath, head, requestTimeout, proxyAddr)
 	}
 
 	_ = response.CloseBodyStream()
@@ -64,11 +80,11 @@ func Download(url string, savePath string, requestTimeout int, proxyAddr string)
 
 		// 创建文件
 		if err != nil {
-			return fmt.Errorf("文件保存出错，检查目录: %v", err)
+			return responseHeader, fmt.Errorf("文件保存出错，检查目录: %v", err)
 		}
 		// 保存到文件
-		return response.BodyWriteTo(f)
+		return responseHeader, response.BodyWriteTo(f)
 	} else {
-		return fmt.Errorf("下载文件失败：%d", statusCode)
+		return responseHeader, fmt.Errorf("下载文件失败：%d", statusCode)
 	}
 }
