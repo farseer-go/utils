@@ -8,6 +8,7 @@ require (
 	github.com/shirou/gopsutil/v3 v3.23.10
 	github.com/stretchr/testify v1.8.4
 	github.com/valyala/fasthttp v1.51.0
+	golang.org/x/text v0.13.0
 )
 
 exclude github.com/timandy/routine v1.1.3
@@ -28,6 +29,5 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
