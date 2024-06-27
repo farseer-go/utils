@@ -11,6 +11,7 @@ type client struct {
 	body           any
 	contentType    string
 	requestTimeout int
+	proxy          string
 }
 
 // NewClient 创建Client客户端
@@ -47,6 +48,12 @@ func (receiver *client) Body(body any) *client {
 	return receiver
 }
 
+// Proxy 设置Proxy
+func (receiver *client) Proxy(proxy string) *client {
+	receiver.proxy = proxy
+	return receiver
+}
+
 // SetJsonType 设置application/json
 func (receiver *client) SetJsonType() *client {
 	receiver.contentType = "application/json"
@@ -67,13 +74,13 @@ func (receiver *client) Timeout(requestTimeout int) *client {
 }
 
 // Post POST请求
-func (receiver *client) Post() (string, int, error) {
-	return httpRequest("POST", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+func (receiver *client) Post() (string, int, map[string]string, error) {
+	return RequestProxy("POST", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout, receiver.proxy)
 }
 
 // PostUnmarshal POST请求，并反序列成对象
 func (receiver *client) PostUnmarshal(val any) (int, error) {
-	rspJson, statusCode, err := httpRequest("POST", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+	rspJson, statusCode, _, err := RequestProxy("POST", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout, receiver.proxy)
 
 	if statusCode >= 400 {
 		flog.Warningf("%s %d http.PostUnmarshal", receiver.url, statusCode)
@@ -91,13 +98,13 @@ func (receiver *client) PostUnmarshal(val any) (int, error) {
 }
 
 // Get GET方法请求
-func (receiver *client) Get() (string, int, error) {
-	return httpRequest("GET", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+func (receiver *client) Get() (string, int, map[string]string, error) {
+	return RequestProxy("GET", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout, receiver.proxy)
 }
 
 // GetUnmarshal GET方法请求，并反序列成对象
 func (receiver *client) GetUnmarshal(val any) (int, error) {
-	rspJson, statusCode, err := httpRequest("GET", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+	rspJson, statusCode, _, err := RequestProxy("GET", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout, receiver.proxy)
 
 	if statusCode >= 400 {
 		flog.Warningf("%s %d http.GetUnmarshal", receiver.url, statusCode)
@@ -114,13 +121,13 @@ func (receiver *client) GetUnmarshal(val any) (int, error) {
 }
 
 // Put PUT方法请求
-func (receiver *client) Put() (string, int, error) {
-	return httpRequest("PUT", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+func (receiver *client) Put() (string, int, map[string]string, error) {
+	return RequestProxy("PUT", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout, receiver.proxy)
 }
 
 // PutUnmarshal PUT方法请求，并反序列成对象
 func (receiver *client) PutUnmarshal(val any) (int, error) {
-	rspJson, statusCode, err := httpRequest("PUT", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout)
+	rspJson, statusCode, _, err := RequestProxy("PUT", receiver.url, receiver.head, receiver.body, receiver.contentType, receiver.requestTimeout, receiver.proxy)
 	if statusCode >= 400 {
 		flog.Warningf("%s %d http.PutUnmarshal", receiver.url, statusCode)
 	}
