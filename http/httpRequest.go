@@ -3,6 +3,7 @@ package http
 import (
 	"crypto/tls"
 	"encoding/json"
+	"github.com/farseer-go/fs/configure"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/parse"
@@ -17,8 +18,12 @@ import (
 
 // 支持请求超时设置，单位：ms
 func httpRequest(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int) (string, int, error) {
-	rspBody, statusCode, _, err := RequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, "")
+	rspBody, statusCode, _, err := RequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, configure.GetString("Proxy"))
 	return rspBody, statusCode, err
+}
+
+func RequestProxyConfigure(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int) (string, int, map[string]string, error) {
+	return RequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, configure.GetString("Proxy"))
 }
 
 // RequestProxy 支持请求超时设置，单位：ms
