@@ -52,7 +52,7 @@ func RunShellContext(ctx context.Context, command string, receiveOutput chan str
 // return：exit code
 func runCmdContext(ctx context.Context, command string, args []string, receiveOutput chan string, environment map[string]string, workingDirectory string, outputCmd bool) int {
 	if outputCmd {
-		receiveOutput <- command
+		receiveOutput <- command + " " + strings.Join(args, " ")
 	}
 	cmd := exec.CommandContext(ctx, command, args...)
 	cmd.Dir = workingDirectory
