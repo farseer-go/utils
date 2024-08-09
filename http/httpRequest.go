@@ -1,8 +1,12 @@
 package http
 
 import (
+	bytes2 "bytes"
+	"compress/flate"
+	"compress/gzip"
 	"crypto/tls"
 	"encoding/json"
+	"fmt"
 	"github.com/farseer-go/fs/configure"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
@@ -10,7 +14,11 @@ import (
 	"github.com/farseer-go/fs/trace"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpproxy"
+	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding/traditionalchinese"
+	"golang.org/x/text/transform"
+	"io"
+	"io/ioutil"
 	"net/url"
 	"strings"
 	"time"
@@ -18,16 +26,25 @@ import (
 
 // 支持请求超时设置，单位：ms
 func httpRequest(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int) (string, int, error) {
-	rspBody, statusCode, _, err := RequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, configure.GetString("Proxy"))
+	rspBody, statusCode, _, err := tryRequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, configure.GetString("Proxy"), 1)
 	return rspBody, statusCode, err
 }
 
 func RequestProxyConfigure(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int) (string, int, map[string]string, error) {
-	return RequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, configure.GetString("Proxy"))
+	return tryRequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, configure.GetString("Proxy"), 1)
 }
 
 // RequestProxy 支持请求超时设置，单位：ms
 func RequestProxy(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int, proxyAddr string) (string, int, map[string]string, error) {
+	return tryRequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, proxyAddr, 1)
+}
+
+// tryRequestProxy 支持请求超时设置，单位：ms
+func tryRequestProxy(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int, proxyAddr string, tryCount int) (string, int, map[string]string, error) {
+	if tryCount > 3 {
+		return "", 0, nil, fmt.Errorf("已超过最大尝试次数")
+	}
+
 	traceDetailHttp := container.Resolve[trace.IManager]().TraceHttp(methodName, requestUrl)
 
 	// request
@@ -80,12 +97,18 @@ func RequestProxy(methodName string, requestUrl string, head map[string]any, bod
 		head["Trace-Id"] = traceContext.GetTraceId()
 		head["Trace-Level"] = traceContext.GetTraceLevel()
 		head["Trace-App-Name"] = core.AppName
+		head["Accept-Encoding"] = ""
 	}
 
 	if head != nil || len(head) > 0 {
 		for k, v := range head {
 			request.Header.Set(k, parse.Convert(v, ""))
 		}
+	}
+
+	// 支持压缩的格式
+	if head == nil || head["Accept-Encoding"] == "" {
+		request.Header.Set("Accept-Encoding", "gzip, deflate")
 	}
 
 	// Method
@@ -127,24 +150,46 @@ func RequestProxy(methodName string, requestUrl string, head map[string]any, bod
 	})
 	responseHeader["Content-Type"] = string(response.Header.ContentType())
 
+	// 返回的body内容
+	var responseBytes []byte
+	// 解压缩
+	responseContentEncoding := string(response.Header.ContentEncoding())
+	switch responseContentEncoding {
+	case "gzip":
+		bodyReader, _ := gzip.NewReader(bytes2.NewReader(response.Body()))
+		responseBytes, _ = ioutil.ReadAll(bodyReader)
+	case "deflate":
+		bodyReader := flate.NewReader(bytes2.NewReader(response.Body()))
+		responseBytes, _ = ioutil.ReadAll(bodyReader)
+	default:
+		responseBytes = response.Body()
+	}
+
 	// 找到对应的响应编码
-	charset := ""
-	for _, ctypes := range strings.Split(responseHeader["Content-Type"], ";") {
-		ctype := strings.Split(ctypes, "=")
-		if strings.TrimSpace(ctype[0]) == "charset" {
-			charset = strings.TrimSpace(ctype[1])
-			break
+	e, name, certain := charset.DetermineEncoding(responseBytes, contentType)
+
+	//charset := ""
+	//for _, ctypes := range strings.Split(responseHeader["Content-Type"], ";") {
+	//	ctype := strings.Split(ctypes, "=")
+	//	if strings.TrimSpace(ctype[0]) == "charset" {
+	//		charset = strings.TrimSpace(ctype[1])
+	//		break
+	//	}
+	//}
+
+	var bodyContent string
+	switch name { // strings.ToLower(charset)
+	case "big5":
+		responseBytes, _ = traditionalchinese.Big5.NewDecoder().Bytes(responseBytes)
+	default:
+		if !certain || name != "utf-8" {
+			// 使用新的decder来解析网页内容
+			bodyReader := transform.NewReader(bytes2.NewReader(responseBytes), e.NewDecoder())
+			responseBytes, _ = io.ReadAll(bodyReader)
 		}
 	}
 
-	var bodyContent string
-	switch strings.ToLower(charset) {
-	case "big5":
-		bodyBytes, _ := traditionalchinese.Big5.NewDecoder().Bytes(response.Body())
-		bodyContent = string(bodyBytes)
-	default:
-		bodyContent = string(response.Body())
-	}
+	bodyContent = string(responseBytes)
 
 	// 链路追踪设置出入参
 	traceDetailHttp.SetHttpRequest(requestUrl, head, responseHeader, bodyVal, bodyContent, response.StatusCode())
@@ -152,6 +197,11 @@ func RequestProxy(methodName string, requestUrl string, head map[string]any, bod
 
 	if err != nil {
 		return "", 0, nil, err
+	}
+
+	// 302跳转
+	if response.StatusCode() == 302 && bodyContent == "" && strings.HasPrefix(responseHeader["Location"], "http") {
+		return tryRequestProxy(methodName, responseHeader["Location"], head, body, contentType, requestTimeout, proxyAddr, tryCount+1)
 	}
 	return bodyContent, response.StatusCode(), responseHeader, nil
 }
