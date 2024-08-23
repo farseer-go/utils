@@ -34,6 +34,7 @@ func Download(url string, savePath string, head map[string]any, requestTimeout i
 
 	// 设置代理
 	if proxyAddr != "" {
+		proxyAddr = ConvertSocks5(proxyAddr)
 		fastHttpClient.Dial = fasthttpproxy.FasthttpSocksDialer(proxyAddr)
 	}
 

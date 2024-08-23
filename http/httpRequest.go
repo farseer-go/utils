@@ -121,9 +121,7 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 	}
 	// 设置代理
 	if proxyAddr != "" {
-		if index := strings.Index(proxyAddr, "://"); index > -1 && !strings.HasPrefix(strings.ToLower(proxyAddr), "socks5://") {
-			proxyAddr = "socks5" + proxyAddr[index:]
-		}
+		proxyAddr = ConvertSocks5(proxyAddr)
 		fastHttpClient.Dial = fasthttpproxy.FasthttpSocksDialer(proxyAddr)
 	}
 	var err error
