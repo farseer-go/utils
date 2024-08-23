@@ -28,7 +28,8 @@ func Download(url string, savePath string, head map[string]any, requestTimeout i
 			// 指定不校验 SSL/TLS 证书
 			InsecureSkipVerify: true,
 		},
-		RetryIf: func(request *fasthttp.Request) bool { return false },
+		RetryIf:        func(request *fasthttp.Request) bool { return false },
+		ReadBufferSize: 8192,
 	}
 
 	// 设置代理
