@@ -24,19 +24,13 @@ import (
 	"time"
 )
 
-// 支持请求超时设置，单位：ms
-func httpRequest(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int) (string, int, error) {
-	rspBody, statusCode, _, err := tryRequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, configure.GetString("Proxy"), 1)
-	return rspBody, statusCode, err
+// RequestProxy 支持请求超时设置，单位：ms
+func RequestProxy(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int, proxyAddr string) (string, int, map[string]string, error) {
+	return tryRequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, proxyAddr, 1)
 }
 
 func RequestProxyConfigure(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int) (string, int, map[string]string, error) {
 	return tryRequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, configure.GetString("Proxy"), 1)
-}
-
-// RequestProxy 支持请求超时设置，单位：ms
-func RequestProxy(methodName string, requestUrl string, head map[string]any, body any, contentType string, requestTimeout int, proxyAddr string) (string, int, map[string]string, error) {
-	return tryRequestProxy(methodName, requestUrl, head, body, contentType, requestTimeout, proxyAddr, 1)
 }
 
 // tryRequestProxy 支持请求超时设置，单位：ms
