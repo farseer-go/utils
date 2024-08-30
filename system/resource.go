@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-type resource struct {
+type Resource struct {
 	OS                 string  // 操作系统名称
 	Processes          uint64  // 进程数
 	IP                 string  // IP
@@ -28,12 +28,12 @@ type resource struct {
 	DiskUsagePercent   float64 // 硬盘使用百分比
 }
 
-func (receiver *resource) ToString() string {
+func (receiver *Resource) ToString() string {
 	return fmt.Sprintf("%+v", receiver)
 }
 
 // GetResource 获取当前环境信息
-func GetResource() *resource {
+func GetResource() Resource {
 	info, _ := cpu.Percent(time.Second, false)
 	infoStats, _ := cpu.Info()
 	memory, _ := mem.VirtualMemory()
@@ -45,7 +45,7 @@ func GetResource() *resource {
 	if len(info) == 0 {
 		info = []float64{float64(0)}
 	}
-	return &resource{
+	return Resource{
 		OS:                 hostInfo.OS,
 		Processes:          hostInfo.Procs,
 		IP:                 net.GetIp(),
