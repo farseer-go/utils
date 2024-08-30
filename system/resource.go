@@ -7,7 +7,6 @@ import (
 	"github.com/shirou/gopsutil/v3/disk"
 	"github.com/shirou/gopsutil/v3/host"
 	"github.com/shirou/gopsutil/v3/mem"
-	"time"
 )
 
 type Resource struct {
@@ -34,7 +33,7 @@ func (receiver *Resource) ToString() string {
 
 // GetResource 获取当前环境信息
 func GetResource() Resource {
-	info, _ := cpu.Percent(time.Second, false)
+	info, _ := cpu.Percent(0, false)
 	infoStats, _ := cpu.Info()
 	memory, _ := mem.VirtualMemory()
 	hostInfo, _ := host.Info()
