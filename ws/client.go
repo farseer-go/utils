@@ -1,11 +1,15 @@
 package ws
 
 import (
+	ctx "context"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"github.com/farseer-go/fs/exception"
 	"github.com/farseer-go/fs/fastReflect"
 	"github.com/farseer-go/fs/parse"
 	"golang.org/x/net/websocket"
+	"net"
 	"net/http"
 )
 
@@ -14,6 +18,10 @@ type Client struct {
 	config        *websocket.Config // 客户端配置
 	conn          *websocket.Conn   // 客户端连接
 	msgBufferSize int               // 接收消息时的缓冲区大小
+	isClose       bool              // 是否断开连接
+	Ctx           ctx.Context       // 用于通知应用端是否断开连接
+	cancel        ctx.CancelFunc    // 用于通知Ctx，连接已断开
+	AutoExit      bool              // 当断开连接时，自动退出
 }
 
 // NewClient 实例化对象
@@ -29,10 +37,14 @@ func NewClient(addr string, msgBufferSize int) (*Client, error) {
 		msgBufferSize = 1024
 	}
 
-	return &Client{
+	client := &Client{
 		config:        config,
 		msgBufferSize: msgBufferSize,
-	}, nil
+		AutoExit:      true,
+	}
+
+	client.Ctx, client.cancel = ctx.WithCancel(ctx.Background())
+	return client, nil
 }
 
 // SetHeader 设置header
@@ -51,6 +63,9 @@ func (receiver *Client) SetHeaderMap(m map[string]any) {
 func (receiver *Client) Connect() error {
 	var err error
 	receiver.conn, err = websocket.DialConfig(receiver.config)
+	if err != nil {
+		receiver.errorIsClose(err)
+	}
 	return err
 }
 
@@ -59,6 +74,7 @@ func (receiver *Client) ReceiverJson(val any) error {
 	retMsg := make([]byte, receiver.msgBufferSize)
 	n, err := receiver.conn.Read(retMsg)
 	if err != nil {
+		receiver.errorIsClose(err)
 		return err
 	}
 	return json.Unmarshal(retMsg[:n], val)
@@ -69,6 +85,7 @@ func (receiver *Client) Receiver() (string, error) {
 	var retMsg = make([]byte, receiver.msgBufferSize)
 	n, err := receiver.conn.Read(retMsg)
 	if err != nil {
+		receiver.errorIsClose(err)
 		return "", err
 	}
 	return string(retMsg[:n]), err
@@ -79,6 +96,9 @@ func (receiver *Client) Send(msg any) error {
 	switch fastReflect.PointerOf(msg).Type {
 	case fastReflect.GoBasicType:
 		_, err := receiver.conn.Write([]byte(parse.ToString(msg)))
+		if err != nil {
+			receiver.errorIsClose(err)
+		}
 		return err
 	default:
 		marshalBytes, err := json.Marshal(msg)
@@ -86,6 +106,9 @@ func (receiver *Client) Send(msg any) error {
 			return fmt.Errorf("发送数据时，出现反序列失败：%s", err.Error())
 		}
 		_, err = receiver.conn.Write(marshalBytes)
+		if err != nil {
+			receiver.errorIsClose(err)
+		}
 		return err
 	}
 }
@@ -93,4 +116,23 @@ func (receiver *Client) Send(msg any) error {
 // Close 关闭连接
 func (receiver *Client) Close() {
 	_ = receiver.conn.Close()
+	receiver.cancel()
+	receiver.isClose = true
+}
+
+// IsClose 是否已断开连接
+func (receiver *Client) IsClose() bool {
+	return receiver.isClose
+}
+
+// 根据错误信息，判断是否为断开连接导致的
+func (receiver *Client) errorIsClose(err error) {
+	var opError *net.OpError
+	if errors.As(err, &opError) || err.Error() == "EOF" {
+		receiver.cancel()
+		receiver.isClose = true
+		if receiver.AutoExit {
+			exception.ThrowWebException(408, "服务端已关闭")
+		}
+	}
 }
