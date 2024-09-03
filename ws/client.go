@@ -9,12 +9,14 @@ import (
 	"net/http"
 )
 
+// Client websocket 客户端
 type Client struct {
 	config        *websocket.Config // 客户端配置
 	conn          *websocket.Conn   // 客户端连接
 	msgBufferSize int               // 接收消息时的缓冲区大小
 }
 
+// NewClient 实例化对象
 func NewClient(addr string, msgBufferSize int) (*Client, error) {
 	config, err := websocket.NewConfig(addr, addr)
 	config.Header = make(http.Header)
