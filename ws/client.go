@@ -69,8 +69,8 @@ func (receiver *Client) Connect() error {
 	return err
 }
 
-// ReceiverJson 接收消息（并反序列化成val）
-func (receiver *Client) ReceiverJson(val any) error {
+// Receiver 接收消息（并反序列化成val）
+func (receiver *Client) Receiver(val any) error {
 	retMsg := make([]byte, receiver.msgBufferSize)
 	n, err := receiver.conn.Read(retMsg)
 	if err != nil {
@@ -80,8 +80,8 @@ func (receiver *Client) ReceiverJson(val any) error {
 	return json.Unmarshal(retMsg[:n], val)
 }
 
-// Receiver 接收消息
-func (receiver *Client) Receiver() (string, error) {
+// ReceiverMessage 接收消息
+func (receiver *Client) ReceiverMessage() (string, error) {
 	var retMsg = make([]byte, receiver.msgBufferSize)
 	n, err := receiver.conn.Read(retMsg)
 	if err != nil {
