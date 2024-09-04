@@ -47,6 +47,16 @@ func NewClient(addr string, msgBufferSize int) (*Client, error) {
 	return client, nil
 }
 
+// Connect 连接
+func Connect(addr string, msgBufferSize int) (*Client, error) {
+	client, err := NewClient(addr, msgBufferSize)
+	if err != nil {
+		return client, err
+	}
+	err = client.Connect()
+	return client, err
+}
+
 // SetHeader 设置header
 func (receiver *Client) SetHeader(key, value string) {
 	receiver.config.Header.Set(key, value)
