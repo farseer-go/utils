@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"github.com/farseer-go/fs/exception"
 	"github.com/farseer-go/fs/fastReflect"
-	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/parse"
 	"golang.org/x/net/websocket"
 	"net"
@@ -35,7 +34,7 @@ func NewClient(addr string, msgBufferSize int) (*Client, error) {
 	}
 
 	if msgBufferSize == 0 {
-		msgBufferSize = 1024
+		msgBufferSize = 4096
 	}
 
 	client := &Client{
@@ -88,7 +87,6 @@ func (receiver *Client) Receiver(val any) error {
 		receiver.errorIsClose(err)
 		return err
 	}
-	flog.Info(string(retMsg[:n]))
 	return json.Unmarshal(retMsg[:n], val)
 }
 
