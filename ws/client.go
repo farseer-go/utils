@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/farseer-go/fs/exception"
 	"github.com/farseer-go/fs/fastReflect"
+	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/fs/parse"
 	"golang.org/x/net/websocket"
 	"net"
@@ -87,6 +88,7 @@ func (receiver *Client) Receiver(val any) error {
 		receiver.errorIsClose(err)
 		return err
 	}
+	flog.Info(string(retMsg[:n]))
 	return json.Unmarshal(retMsg[:n], val)
 }
 
