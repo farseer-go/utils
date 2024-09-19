@@ -1,7 +1,7 @@
 package http
 
 import (
-	bytes2 "bytes"
+	"bytes"
 	"compress/flate"
 	"compress/gzip"
 	"crypto/tls"
@@ -45,6 +45,7 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 	request := fasthttp.AcquireRequest()
 
 	var bodyVal string
+
 	if body != nil {
 		switch b := body.(type) {
 		case string:
@@ -57,6 +58,8 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 			bodyVal = mapStringToString(b, contentType)
 		case map[string]any:
 			bodyVal = mapAnyToString(b, contentType)
+		case *bytes.Buffer:
+			bodyVal = (body.(*bytes.Buffer)).String()
 		default:
 			bytesData, _ := json.Marshal(body)
 			bodyVal = string(bytesData)
@@ -148,10 +151,10 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 	responseContentEncoding := string(response.Header.ContentEncoding())
 	switch responseContentEncoding {
 	case "gzip":
-		bodyReader, _ := gzip.NewReader(bytes2.NewReader(response.Body()))
+		bodyReader, _ := gzip.NewReader(bytes.NewReader(response.Body()))
 		responseBytes, _ = ioutil.ReadAll(bodyReader)
 	case "deflate":
-		bodyReader := flate.NewReader(bytes2.NewReader(response.Body()))
+		bodyReader := flate.NewReader(bytes.NewReader(response.Body()))
 		responseBytes, _ = ioutil.ReadAll(bodyReader)
 	default:
 		responseBytes = response.Body()
@@ -176,7 +179,7 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 	default:
 		if !certain || name != "utf-8" {
 			// 使用新的decder来解析网页内容
-			bodyReader := transform.NewReader(bytes2.NewReader(responseBytes), e.NewDecoder())
+			bodyReader := transform.NewReader(bytes.NewReader(responseBytes), e.NewDecoder())
 			responseBytes, _ = io.ReadAll(bodyReader)
 		}
 	}
