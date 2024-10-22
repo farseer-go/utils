@@ -52,5 +52,5 @@ func ClearFile(path string) {
 // path：目录路径
 func IsExists(path string) bool {
 	_, err := os.Stat(path)
-	return err == nil
+	return err == nil || os.IsExist(err)
 }
