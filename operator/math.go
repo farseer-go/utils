@@ -2,6 +2,7 @@ package operator
 
 import (
 	"github.com/farseer-go/fs/parse"
+	"github.com/farseer-go/utils/str"
 )
 
 // GetSum 取和数
@@ -23,7 +24,9 @@ func GetTail(num int) int {
 }
 
 // GetHead 取数字第一位数
-func GetHead(num int) int {
-	n:=string(parse.ToString(num)[0])
+func GetHead(num int, numLength int) int {
+	strNum := parse.ToString(num)
+	strNum = str.PadLeft(strNum, numLength, "0")
+	n := string(strNum[0])
 	return parse.ToInt(n)
 }
