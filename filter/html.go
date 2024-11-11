@@ -18,8 +18,8 @@ func TrimHtml(src string) string {
 	//去除所有尖括号内的HTML代码，并换成换行符
 	re, _ = regexp.Compile("<[\\S\\s]+?>")
 	src = re.ReplaceAllString(src, "\n")
-	//去除连续的换行符
-	re, _ = regexp.Compile("s{2,}")
-	src = re.ReplaceAllString(src, "\n")
+	//去除连续的换行符  会把包含  ss  的会员账号替换掉，导致搜索不出来数据
+	//re, _ = regexp.Compile("s{2,}")
+	//src = re.ReplaceAllString(src, "\n")
 	return strings.TrimSpace(src)
 }
