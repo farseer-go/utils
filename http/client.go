@@ -1,7 +1,7 @@
 package http
 
 import (
-	"encoding/json"
+	"github.com/bytedance/sonic"
 	"github.com/farseer-go/fs/flog"
 )
 
@@ -88,7 +88,7 @@ func (receiver *client) PostUnmarshal(val any) (int, error) {
 	}
 
 	if err == nil {
-		err = json.Unmarshal([]byte(rspJson), &val)
+		err = sonic.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
 			flog.Warningf("%s http.PostUnmarshal error:%s", receiver.url, err.Error())
 			return statusCode, err
@@ -111,7 +111,7 @@ func (receiver *client) GetUnmarshal(val any) (int, error) {
 	}
 
 	if err == nil {
-		err = json.Unmarshal([]byte(rspJson), &val)
+		err = sonic.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
 			flog.Warningf("%s http.GetUnmarshal error:%s", receiver.url, err.Error())
 			return statusCode, err
@@ -133,7 +133,7 @@ func (receiver *client) PutUnmarshal(val any) (int, error) {
 	}
 
 	if err == nil {
-		err = json.Unmarshal([]byte(rspJson), &val)
+		err = sonic.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
 			flog.Warningf("%s http.PutUnmarshal error:%s", receiver.url, err.Error())
 			return statusCode, err

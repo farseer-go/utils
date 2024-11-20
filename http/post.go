@@ -1,7 +1,7 @@
 package http
 
 import (
-	"encoding/json"
+	"github.com/bytedance/sonic"
 	"github.com/farseer-go/fs/flog"
 )
 
@@ -28,7 +28,7 @@ func PostJson[TReturn any](url string, head map[string]any, body any, requestTim
 	var val TReturn
 	rspJson, statusCode, _, err := RequestProxyConfigure("POST", url, head, body, "application/json", requestTimeout)
 	if err == nil {
-		err = json.Unmarshal([]byte(rspJson), &val)
+		err = sonic.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
 			_ = flog.Errorf("%s json.Unmarshal error:%s", url, err.Error())
 		}

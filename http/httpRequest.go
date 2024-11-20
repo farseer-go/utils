@@ -5,8 +5,14 @@ import (
 	"compress/flate"
 	"compress/gzip"
 	"crypto/tls"
-	"encoding/json"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"net/url"
+	"strings"
+	"time"
+
+	"github.com/bytedance/sonic"
 	"github.com/farseer-go/fs/configure"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
@@ -17,11 +23,6 @@ import (
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding/traditionalchinese"
 	"golang.org/x/text/transform"
-	"io"
-	"io/ioutil"
-	"net/url"
-	"strings"
-	"time"
 )
 
 // RequestProxy 支持请求超时设置，单位：ms
@@ -61,7 +62,7 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 		case *bytes.Buffer:
 			bodyVal = (body.(*bytes.Buffer)).String()
 		default:
-			bytesData, _ := json.Marshal(body)
+			bytesData, _ := sonic.Marshal(body)
 			bodyVal = string(bytesData)
 		}
 
@@ -203,7 +204,7 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 
 func urlValuesToString(body url.Values, contentType string) string {
 	if contentType == "application/json" {
-		bytesData, _ := json.Marshal(body)
+		bytesData, _ := sonic.Marshal(body)
 		return string(bytesData)
 	} else {
 		return body.Encode()
@@ -212,7 +213,7 @@ func urlValuesToString(body url.Values, contentType string) string {
 
 func mapStringToString(body map[string]string, contentType string) string {
 	if contentType == "application/json" {
-		bytesData, _ := json.Marshal(body)
+		bytesData, _ := sonic.Marshal(body)
 		return string(bytesData)
 	} else {
 		val := make(url.Values)
@@ -225,7 +226,7 @@ func mapStringToString(body map[string]string, contentType string) string {
 
 func mapAnyToString(body map[string]any, contentType string) string {
 	if contentType == "application/json" {
-		bytesData, _ := json.Marshal(body)
+		bytesData, _ := sonic.Marshal(body)
 		return string(bytesData)
 	} else {
 		val := make(url.Values)
