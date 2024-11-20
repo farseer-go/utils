@@ -1,6 +1,8 @@
 package operator
 
 import (
+	"strconv"
+
 	"github.com/farseer-go/fs/parse"
 	"github.com/farseer-go/utils/str"
 )
@@ -26,7 +28,7 @@ func GetTail(num int) int {
 
 // GetHead 取数字第一位数
 func GetHead(num int, numLength int) int {
-	strNum := parse.ToString(num)
+	strNum := strconv.Itoa(num)
 	strNum = str.PadLeft(strNum, numLength, "0")
 	n := string(strNum[0])
 	return parse.ToInt(n)
