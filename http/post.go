@@ -1,8 +1,8 @@
 package http
 
 import (
-	"github.com/bytedance/sonic"
 	"github.com/farseer-go/fs/flog"
+	"github.com/farseer-go/fs/snc"
 )
 
 // Post http post，支持请求超时设置，单位：ms
@@ -28,7 +28,7 @@ func PostJson[TReturn any](url string, head map[string]any, body any, requestTim
 	var val TReturn
 	rspJson, statusCode, _, err := RequestProxyConfigure("POST", url, head, body, "application/json", requestTimeout)
 	if err == nil {
-		err = sonic.Unmarshal([]byte(rspJson), &val)
+		err = snc.Unmarshal([]byte(rspJson), &val)
 		if err != nil {
 			_ = flog.Errorf("%s json.Unmarshal error:%s", url, err.Error())
 		}

@@ -4,7 +4,7 @@ import (
 	"net/url"
 	"testing"
 
-	"github.com/bytedance/sonic"
+	"github.com/farseer-go/fs/snc"
 	"github.com/farseer-go/utils/http"
 	"github.com/stretchr/testify/assert"
 	"github.com/valyala/fasthttp"
@@ -44,7 +44,7 @@ func TestGet(t *testing.T) {
 			Args map[string]string `json:"args"`
 		}
 		var val = result{}
-		err = sonic.Unmarshal([]byte(res), &val)
+		err = snc.Unmarshal([]byte(res), &val)
 		assert.NoError(t, err)
 		assert.Equal(t, result{
 			Args: map[string]string{"age": "23", "name": "zhaofan"},
@@ -59,7 +59,7 @@ func TestGet(t *testing.T) {
 			Args map[string]string `json:"args"`
 		}
 		var val = result{}
-		err = sonic.Unmarshal([]byte(res), &val)
+		err = snc.Unmarshal([]byte(res), &val)
 		assert.NoError(t, err)
 		assert.Equal(t, result{
 			Args: map[string]string{"age": "23", "name": "zhaofan", "p": "123"},

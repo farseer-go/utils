@@ -3,7 +3,7 @@ package test
 import (
 	"testing"
 
-	"github.com/bytedance/sonic"
+	"github.com/farseer-go/fs/snc"
 	"github.com/farseer-go/utils/http"
 	"github.com/stretchr/testify/assert"
 	"github.com/valyala/fasthttp"
@@ -23,7 +23,7 @@ func TestPost(t *testing.T) {
 		assert.Equal(t, fasthttp.StatusOK, statusCode)
 
 		var val = result{}
-		err = sonic.Unmarshal([]byte(res), &val)
+		err = snc.Unmarshal([]byte(res), &val)
 		assert.NoError(t, err)
 		assert.Equal(t, data, val.Json)
 	})
@@ -33,7 +33,7 @@ func TestPost(t *testing.T) {
 		assert.NoError(t, err)
 		assert.Equal(t, fasthttp.StatusOK, statusCode)
 		var val = result{}
-		err = sonic.Unmarshal([]byte(res), &val)
+		err = snc.Unmarshal([]byte(res), &val)
 		assert.NoError(t, err)
 		assert.Equal(t, data, val.Form)
 	})
@@ -48,7 +48,7 @@ func TestPostForm(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, fasthttp.StatusOK, statusCode)
 	var val = make(map[string]any, 0)
-	err = sonic.Unmarshal([]byte(res), &val)
+	err = snc.Unmarshal([]byte(res), &val)
 	assert.NoError(t, err)
 	assert.Equal(t, data, val["form"])
 }
@@ -58,7 +58,7 @@ func TestPostFormWithoutBody(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, fasthttp.StatusOK, statusCode)
 	var val = make(map[string]any, 0)
-	err = sonic.Unmarshal([]byte(res), &val)
+	err = snc.Unmarshal([]byte(res), &val)
 	assert.NoError(t, err)
 }
 

@@ -12,11 +12,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/bytedance/sonic"
 	"github.com/farseer-go/fs/configure"
 	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/parse"
+	"github.com/farseer-go/fs/snc"
 	"github.com/farseer-go/fs/trace"
 	"github.com/valyala/fasthttp"
 	"github.com/valyala/fasthttp/fasthttpproxy"
@@ -62,7 +62,7 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 		case *bytes.Buffer:
 			bodyVal = (body.(*bytes.Buffer)).String()
 		default:
-			bytesData, _ := sonic.Marshal(body)
+			bytesData, _ := snc.Marshal(body)
 			bodyVal = string(bytesData)
 		}
 
@@ -204,7 +204,7 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 
 func urlValuesToString(body url.Values, contentType string) string {
 	if contentType == "application/json" {
-		bytesData, _ := sonic.Marshal(body)
+		bytesData, _ := snc.Marshal(body)
 		return string(bytesData)
 	} else {
 		return body.Encode()
@@ -213,7 +213,7 @@ func urlValuesToString(body url.Values, contentType string) string {
 
 func mapStringToString(body map[string]string, contentType string) string {
 	if contentType == "application/json" {
-		bytesData, _ := sonic.Marshal(body)
+		bytesData, _ := snc.Marshal(body)
 		return string(bytesData)
 	} else {
 		val := make(url.Values)
@@ -226,7 +226,7 @@ func mapStringToString(body map[string]string, contentType string) string {
 
 func mapAnyToString(body map[string]any, contentType string) string {
 	if contentType == "application/json" {
-		bytesData, _ := sonic.Marshal(body)
+		bytesData, _ := snc.Marshal(body)
 		return string(bytesData)
 	} else {
 		val := make(url.Values)

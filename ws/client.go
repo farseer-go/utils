@@ -7,10 +7,10 @@ import (
 	"net"
 	"net/http"
 
-	"github.com/bytedance/sonic"
 	"github.com/farseer-go/fs/exception"
 	"github.com/farseer-go/fs/fastReflect"
 	"github.com/farseer-go/fs/parse"
+	"github.com/farseer-go/fs/snc"
 	"golang.org/x/net/websocket"
 )
 
@@ -88,7 +88,7 @@ func (receiver *Client) Receiver(val any) error {
 		receiver.errorIsClose(err)
 		return err
 	}
-	return sonic.Unmarshal(retMsg[:n], val)
+	return snc.Unmarshal(retMsg[:n], val)
 }
 
 // ReceiverMessage 接收消息
@@ -112,7 +112,7 @@ func (receiver *Client) Send(msg any) error {
 		}
 		return err
 	default:
-		marshalBytes, err := sonic.Marshal(msg)
+		marshalBytes, err := snc.Marshal(msg)
 		if err != nil {
 			return fmt.Errorf("发送数据时，出现反序列失败：%s", err.Error())
 		}

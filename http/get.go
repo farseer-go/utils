@@ -1,7 +1,7 @@
 package http
 
 import (
-	"github.com/bytedance/sonic"
+	"github.com/farseer-go/fs/snc"
 	_ "github.com/valyala/fasthttp"
 )
 
@@ -22,7 +22,7 @@ func GetJson[TReturn any](url string, body any, requestTimeout int) (TReturn, er
 	rspJson, _, _, err := RequestProxyConfigure("GET", url, nil, body, "application/json", requestTimeout)
 	var val TReturn
 	if err == nil {
-		_ = sonic.Unmarshal([]byte(rspJson), &val)
+		_ = snc.Unmarshal([]byte(rspJson), &val)
 	}
 	return val, err
 }
