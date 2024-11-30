@@ -88,12 +88,12 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 	}
 
 	// 链路追踪
-	if traceContext := container.Resolve[trace.IManager]().GetCurTrace(); traceContext != nil {
+	if traceContext := trace.CurTraceContext.Get(); traceContext != nil {
 		if head == nil {
 			head = make(map[string]any)
 		}
-		head["Trace-Id"] = traceContext.GetTraceId()
-		head["Trace-Level"] = traceContext.GetTraceLevel()
+		head["Trace-Id"] = traceContext.TraceId
+		head["Trace-Level"] = traceContext.TraceLevel
 		head["Trace-App-Name"] = core.AppName
 		head["Accept-Encoding"] = ""
 	}
