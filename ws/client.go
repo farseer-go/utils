@@ -22,11 +22,11 @@ type Client struct {
 	isClose       bool              // 是否断开连接
 	Ctx           ctx.Context       // 用于通知应用端是否断开连接
 	cancel        ctx.CancelFunc    // 用于通知Ctx，连接已断开
-	AutoExit      bool              // 当断开连接时，自动退出
+	AutoExit      bool              // 当断开连接时，自动退出（抛出异常）
 }
 
 // NewClient 实例化对象
-func NewClient(addr string, msgBufferSize int) (*Client, error) {
+func NewClient(addr string, msgBufferSize int, autoExit bool) (*Client, error) {
 	config, err := websocket.NewConfig(addr, addr)
 	config.Header = make(http.Header)
 
@@ -41,7 +41,7 @@ func NewClient(addr string, msgBufferSize int) (*Client, error) {
 	client := &Client{
 		config:        config,
 		msgBufferSize: msgBufferSize,
-		AutoExit:      true,
+		AutoExit:      autoExit,
 	}
 
 	client.Ctx, client.cancel = ctx.WithCancel(ctx.Background())
@@ -50,7 +50,7 @@ func NewClient(addr string, msgBufferSize int) (*Client, error) {
 
 // Connect 连接
 func Connect(addr string, msgBufferSize int) (*Client, error) {
-	client, err := NewClient(addr, msgBufferSize)
+	client, err := NewClient(addr, msgBufferSize, true)
 	if err != nil {
 		return client, err
 	}
@@ -75,7 +75,8 @@ func (receiver *Client) Connect() error {
 	var err error
 	receiver.conn, err = websocket.DialConfig(receiver.config)
 	if err != nil {
-		receiver.errorIsClose(err)
+		receiver.cancel()
+		receiver.isClose = true
 	}
 	return err
 }
