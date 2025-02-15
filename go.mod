@@ -12,6 +12,7 @@ require (
 	github.com/valyala/fasthttp v1.57.0
 	golang.org/x/net v0.31.0
 	golang.org/x/text v0.20.0
+	github.com/aliyun/alibabacloud-oss-go-sdk-v2 v1.2.0 // indirect
 )
 
 require (
