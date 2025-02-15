@@ -3,6 +3,7 @@ package db
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/farseer-go/collections"
@@ -48,4 +49,26 @@ func BackupMysql(host string, port int, username, password, database string, fil
 		return 0, fmt.Errorf("获取备份文件信息:%s,失败： %s", fileName, err.Error())
 	}
 	return fileInfo.Size() / 1024, nil
+}
+
+// 恢复数据库
+func RecoverMysql(host string, port int, username, password, database string, fileName string) error {
+	path := filepath.Dir(fileName)
+	fileExt := filepath.Ext(fileName)
+
+	var cmd string
+	switch fileExt {
+	case ".gz":
+		cmd = fmt.Sprintf("gzip -dc %s | mysql -h %s -P %d -u%s -p%s %s", filepath.Base(fileName), host, port, username, password, database)
+	case ".sql":
+		cmd = fmt.Sprintf("mysql -h %s -P %d -u%s -p%s %s < %s", host, port, username, password, database, fileName)
+	default:
+		return fmt.Errorf("未知的扩展名：%s", fileExt)
+	}
+
+	code, result := exec.RunShellCommand(cmd, nil, path, false)
+	if code != 0 {
+		return fmt.Errorf("还原SQL文件：%s失败：%s", fileName, collections.NewList(result...).ToString(","))
+	}
+	return nil
 }

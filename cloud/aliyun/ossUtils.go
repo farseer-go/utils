@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
+	"path/filepath"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
 	"github.com/farseer-go/collections"
 	"github.com/farseer-go/fs/dateTime"
-	"github.com/farseer-go/fs/flog"
 	"github.com/farseer-go/utils/file"
 )
 
@@ -119,11 +118,8 @@ func (receiver *OSSConfig) DownloadFile(backupRoot string, fileName string) erro
 	}
 
 	// 将内容写入到文件
-	pathIndex := strings.LastIndex(fileName, "/")
-	path := backupRoot + fileName[:pathIndex]
-	flog.Infof("创建目录1：%s", path)
+	path := filepath.Dir(fileName)
 	if !file.IsExists(path) {
-		flog.Infof("创建目录2：%s", path)
 		file.CreateDir766(path)
 	}
 	err = os.WriteFile(backupRoot+fileName, data, 0644)
