@@ -78,7 +78,7 @@ func RecoverMysql(host string, port int, username, password, database string, fi
 
 	code, result := exec.RunShellCommand(cmd, nil, path, false)
 	if code != 0 {
-		return fmt.Errorf("还原SQL文件：%s失败：%s", fileName, collections.NewList(result...).ToString(","))
+		return fmt.Errorf("还原SQL文件：%s 时失败：%s", cmd, collections.NewList(result...).ToString(","))
 	}
 	return nil
 }
