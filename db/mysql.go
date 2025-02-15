@@ -37,6 +37,11 @@ type FileObject struct {
 
 // 备份MYSQL
 func BackupMysql(host string, port int, username, password, database string, fileName string) (int64, error) {
+	// 安装 mysqldump
+	if !IsMysqldumpInstalled() {
+		InstallMysqldump()
+	}
+
 	mysqldumpCmd := fmt.Sprintf("mysqldump -h %s -P %d -u%s -p%s %s | gzip > %s", host, port, username, password, database, fileName)
 	code, result := exec.RunShellCommand(mysqldumpCmd, nil, "", false)
 	// 备份失败时删除备份文件
@@ -53,6 +58,11 @@ func BackupMysql(host string, port int, username, password, database string, fil
 
 // 恢复数据库
 func RecoverMysql(host string, port int, username, password, database string, fileName string) error {
+	// 安装 mysqldump
+	if !IsMysqldumpInstalled() {
+		InstallMysqldump()
+	}
+
 	path := filepath.Dir(fileName)
 	fileExt := filepath.Ext(fileName)
 
