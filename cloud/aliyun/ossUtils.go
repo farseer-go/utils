@@ -118,7 +118,7 @@ func (receiver *OSSConfig) DownloadFile(backupRoot string, fileName string) erro
 	}
 
 	// 将内容写入到文件
-	path := filepath.Dir(fileName)
+	path := filepath.Dir(backupRoot + fileName)
 	if !file.IsExists(path) {
 		file.CreateDir766(path)
 	}
