@@ -40,7 +40,7 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 		return "", 0, nil, fmt.Errorf("已超过最大尝试次数")
 	}
 
-	traceDetailHttp := container.Resolve[trace.IManager]().TraceHttp(methodName, requestUrl)
+	traceDetail := container.Resolve[trace.IManager]().TraceHttp(methodName, requestUrl)
 
 	// request
 	request := fasthttp.AcquireRequest()
@@ -188,8 +188,8 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 	bodyContent = string(responseBytes)
 
 	// 链路追踪设置出入参
-	traceDetailHttp.SetHttpRequest(requestUrl, head, responseHeader, bodyVal, bodyContent, response.StatusCode())
-	defer func() { traceDetailHttp.End(err) }()
+	traceDetail.TraceDetailHttp.SetHttpRequest(requestUrl, head, responseHeader, bodyVal, bodyContent, response.StatusCode())
+	defer func() { traceDetail.End(err) }()
 
 	if err != nil {
 		return "", 0, nil, err
