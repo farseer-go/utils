@@ -2,6 +2,7 @@ package system
 
 import (
 	"fmt"
+
 	"github.com/farseer-go/fs/net"
 	"github.com/shirou/gopsutil/v3/cpu"
 	"github.com/shirou/gopsutil/v3/disk"
@@ -11,6 +12,8 @@ import (
 
 type Resource struct {
 	OS                 string  // 操作系统名称
+	HostName           string  // 主机名
+	Architecture       string  // 系统架构
 	Processes          uint64  // 进程数
 	IP                 string  // IP
 	CpuName            string  // CPU名称
@@ -45,6 +48,8 @@ func GetResource() Resource {
 		info = []float64{float64(0)}
 	}
 	return Resource{
+		Architecture:       hostInfo.KernelArch,
+		HostName:           hostInfo.Hostname,
 		OS:                 hostInfo.OS,
 		Processes:          hostInfo.Procs,
 		IP:                 net.GetIp(),
