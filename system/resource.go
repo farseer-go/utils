@@ -36,7 +36,7 @@ func (receiver *Resource) ToString() string {
 
 // GetResource 获取当前环境信息
 func GetResource() Resource {
-	info, _ := cpu.Percent(0, false)
+	cpuPercents, _ := cpu.Percent(0, false)
 	infoStats, _ := cpu.Info()
 	memory, _ := mem.VirtualMemory()
 	hostInfo, _ := host.Info()
@@ -44,19 +44,39 @@ func GetResource() Resource {
 	if len(infoStats) == 0 {
 		infoStats = []cpu.InfoStat{{}}
 	}
-	if len(info) == 0 {
-		info = []float64{float64(0)}
+	if len(cpuPercents) == 0 {
+		cpuPercents = []float64{float64(0)}
 	}
+
+	// 取所有核心数
+	var cores int
+	var cpuMhz float64
+	var cpuModelName string
+	for _, cpuStat := range infoStats {
+		cores += int(cpuStat.Cores)
+		if cpuStat.Mhz > cpuMhz {
+			cpuMhz = cpuStat.Mhz
+			cpuModelName = cpuStat.ModelName
+		}
+	}
+
+	// cpu使用率
+	var cpuUsagePercent float64
+	for _, singleInfo := range cpuPercents {
+		cpuUsagePercent += singleInfo
+	}
+
+	cpuUsagePercent = cpuUsagePercent / float64(len(cpuPercents))
 	return Resource{
 		Architecture:       hostInfo.KernelArch,
 		HostName:           hostInfo.Hostname,
 		OS:                 hostInfo.OS,
 		Processes:          hostInfo.Procs,
 		IP:                 net.GetIp(),
-		CpuName:            infoStats[0].ModelName,
-		CpuMhz:             infoStats[0].Mhz,
-		CpuUsagePercent:    info[0],
-		CpuCores:           int(infoStats[0].Cores),
+		CpuName:            cpuModelName,
+		CpuMhz:             cpuMhz,
+		CpuUsagePercent:    cpuUsagePercent,
+		CpuCores:           cores,
 		MemoryUsage:        memory.Used,
 		MemoryUsagePercent: memory.UsedPercent,
 		MemoryTotal:        memory.Total,
