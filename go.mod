@@ -6,8 +6,8 @@ toolchain go1.23.8
 
 require (
 	github.com/aliyun/alibabacloud-oss-go-sdk-v2 v1.2.0
-	github.com/farseer-go/collections v0.16.0
-	github.com/farseer-go/fs v0.16.7
+	github.com/farseer-go/collections v0.16.8
+	github.com/farseer-go/fs v0.16.8
 	github.com/shirou/gopsutil/v4 v4.25.2
 	github.com/stretchr/testify v1.10.0
 	github.com/valyala/fasthttp v1.57.0
