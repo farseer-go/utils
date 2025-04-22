@@ -1,13 +1,14 @@
 package test
 
 import (
+	"testing"
+
 	"github.com/farseer-go/utils/system"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestResourceResource(t *testing.T) {
-	resource := system.GetResource()
+	resource := system.GetResource("/home", "/")
 	assert.Greater(t, resource.CpuCores, 0)
 	resource.ToString()
 }
