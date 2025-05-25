@@ -6,7 +6,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss"
 	"github.com/aliyun/alibabacloud-oss-go-sdk-v2/oss/credentials"
@@ -56,9 +55,6 @@ func (receiver *OSSConfig) UploadOSS(backupRoot string, fileNames []string) erro
 			Bucket: oss.Ptr(bucketName),
 			Key:    oss.Ptr(fileName),
 			Body:   f,
-			Metadata: map[string]string{
-				"x-oss-meta-local-time": time.Now().Format("2006-01-02 15:04:05"),
-			},
 		})
 
 		if err != nil {
@@ -165,7 +161,7 @@ func (receiver *OSSConfig) GetFileList(filePath string) (collections.List[FileOb
 		lst.Add(FileObject{
 			BackupId: bucketName,
 			FileName: *object.Key,
-			CreateAt: dateTime.New(*object.LastModified),
+			CreateAt: dateTime.New(object.LastModified.Local()),
 			Size:     object.Size / 1024,
 		})
 	}
