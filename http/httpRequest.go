@@ -114,7 +114,7 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 	response := fasthttp.AcquireResponse()
 	defer fasthttp.ReleaseRequest(request)
 	defer fasthttp.ReleaseResponse(response)
-	defer request.SetConnectionClose()
+	//defer request.SetConnectionClose()
 
 	fastHttpClient := fasthttp.Client{
 		TLSConfig: &tls.Config{
