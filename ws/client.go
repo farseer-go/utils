@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"net/http"
+	"time"
 
 	"github.com/farseer-go/fs/exception"
 	"github.com/farseer-go/fs/fastReflect"
@@ -61,6 +62,11 @@ func Connect(addr string, msgBufferSize int) (*Client, error) {
 // SetHeader 设置header
 func (receiver *Client) SetHeader(key, value string) {
 	receiver.config.Header.Set(key, value)
+}
+
+// SetReadDeadline 设置读取超时时间
+func (receiver *Client) SetReadDeadline(timeout time.Duration) {
+	receiver.conn.SetReadDeadline(time.Now().Add(timeout))
 }
 
 // SetHeaderMap 设置header
