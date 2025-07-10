@@ -135,6 +135,10 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 		err = fastHttpClient.Do(request, response)
 	}
 
+	if err != nil {
+		return "", 0, nil, err
+	}
+
 	// 响应头部
 	responseHeader := make(map[string]string)
 	for _, keyBytes := range response.Header.PeekKeys() {
