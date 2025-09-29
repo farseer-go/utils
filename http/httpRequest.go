@@ -200,9 +200,16 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 	}
 
 	// 302跳转
-	if response.StatusCode() == 302 && bodyContent == "" && strings.HasPrefix(responseHeader["Location"], "http") {
-		return tryRequestProxy(methodName, responseHeader["Location"], head, body, contentType, requestTimeout, proxyAddr, tryCount+1)
+	switch response.StatusCode() {
+	case 301, 302:
+		if location := responseHeader["Location"]; bodyContent == "" && location != "" {
+			if !strings.HasPrefix(location, "http") {
+				location = "https://" + location
+			}
+			return tryRequestProxy(methodName, location, head, body, contentType, requestTimeout, proxyAddr, tryCount+1)
+		}
 	}
+
 	return bodyContent, response.StatusCode(), responseHeader, nil
 }
 
