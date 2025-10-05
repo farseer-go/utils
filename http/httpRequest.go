@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"net/url"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -199,13 +200,17 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 		return "", 0, nil, err
 	}
 
-	// 302跳转
-	switch response.StatusCode() {
-	case 301, 302:
-		if location := responseHeader["Location"]; bodyContent == "" && location != "" {
-			if !strings.HasPrefix(location, "http") {
-				location = "https://" + location
-			}
+	// 30X跳转
+	if location := responseHeader["Location"]; bodyContent == "" && location != "" {
+		if !strings.HasPrefix(location, "http") {
+			uri := request.URI()
+			uri.SetPath(filepath.Dir(string(uri.Path())) + "/" + location)
+			location = uri.String()
+		}
+		switch response.StatusCode() {
+		case 301, 302:
+			return tryRequestProxy("GET", location, head, body, contentType, requestTimeout, proxyAddr, tryCount+1)
+		case 307, 308:
 			return tryRequestProxy(methodName, location, head, body, contentType, requestTimeout, proxyAddr, tryCount+1)
 		}
 	}
