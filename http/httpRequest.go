@@ -204,7 +204,11 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 	if location := responseHeader["Location"]; bodyContent == "" && location != "" {
 		if !strings.HasPrefix(location, "http") {
 			uri := request.URI()
-			uri.SetPath(filepath.Dir(string(uri.Path())) + "/" + location)
+			if location[0] == '/' {
+				uri.SetPath(location)
+			} else {
+				uri.SetPath(filepath.Dir(string(uri.Path())) + "/" + location)
+			}
 			location = uri.String()
 		}
 		switch response.StatusCode() {
