@@ -89,7 +89,7 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 	}
 
 	// 链路追踪
-	if traceContext := trace.CurTraceContext.Get(); traceContext != nil {
+	if traceContext, exists := container.Resolve[trace.IManager]().GetTraceContext(); exists {
 		if head == nil {
 			head = make(map[string]any)
 		}
