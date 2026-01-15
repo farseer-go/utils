@@ -4,9 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strings"
 
-	"github.com/farseer-go/collections"
 	"github.com/farseer-go/fs/dateTime"
 	"github.com/farseer-go/utils/exec"
 	"github.com/farseer-go/utils/file"
@@ -14,12 +12,12 @@ import (
 
 // 检查 mysqldump 是否已安装
 func IsMysqldumpInstalled() bool {
-	code, result := exec.RunShellCommand("mysqldump --version", nil, "", false)
-	if code != 0 || len(result) == 0 {
+	result, code := exec.RunShellCommand("mysqldump --version", nil, "", false)
+	if code != 0 || result.Count() == 0 {
 		return false
 	}
 	// 检查输出中是否包含 "mysqldump" 关键字
-	return strings.Contains(result[0], "mysqldump")
+	return result.ContainsAny("mysqldump")
 }
 
 // 安装 mysqldump
@@ -43,11 +41,11 @@ func BackupMysql(host string, port int, username, password, database string, fil
 	}
 
 	mysqldumpCmd := fmt.Sprintf("mysqldump -h %s -P %d -u%s -p%s %s | gzip > %s", host, port, username, password, database, fileName)
-	code, result := exec.RunShellCommand(mysqldumpCmd, nil, "", false)
+	result, code := exec.RunShellCommand(mysqldumpCmd, nil, "", false)
 	// 备份失败时删除备份文件
 	if code != 0 {
 		file.Delete(fileName)
-		return 0, fmt.Errorf("备份%s数据库失败：%s", database, collections.NewList(result...).ToString(","))
+		return 0, fmt.Errorf("备份%s数据库失败：%s", database, result.ToString(","))
 	}
 	fileInfo, err := os.Stat(fileName)
 	if err != nil {
@@ -76,9 +74,9 @@ func RecoverMysql(host string, port int, username, password, database string, fi
 		return fmt.Errorf("未知的扩展名：%s", fileExt)
 	}
 
-	code, result := exec.RunShellCommand(cmd, nil, path, false)
+	result, code := exec.RunShellCommand(cmd, nil, path, false)
 	if code != 0 {
-		return fmt.Errorf("还原SQL文件：%s 时失败：%s", cmd, collections.NewList(result...).ToString(","))
+		return fmt.Errorf("还原SQL文件：%s 时失败：%s", cmd, result.ToString(","))
 	}
 	return nil
 }

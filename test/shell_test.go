@@ -1,42 +1,29 @@
 package test
 
 import (
-	"context"
-	"github.com/farseer-go/utils/exec"
-	"github.com/stretchr/testify/assert"
 	"sync"
 	"testing"
+
+	"github.com/farseer-go/utils/exec"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestRunShellContext(t *testing.T) {
-	receiveOutput := make(chan string, 100)
-	ctx, cancel := context.WithCancel(context.Background())
-	var waitGroup sync.WaitGroup
-	waitGroup.Add(2)
-	go func() {
-		defer waitGroup.Done()
-		for output := range receiveOutput {
-			assert.True(t, output == "执行失败：context canceled" || output == "Sleep 1")
-		}
-	}()
+	receiveOutput, exitCode := exec.RunShellCommand("Sleep 1", nil, "", false)
+	receiveOutput.Foreach(func(output *string) {
+		assert.True(t, *output == "执行失败：context canceled" || *output == "Sleep 1")
+	})
 
-	go func() {
-		defer waitGroup.Done()
-		exitCode := exec.RunShellContext(ctx, "Sleep 1", receiveOutput, nil, "", false)
-		close(receiveOutput)
-		assert.Equal(t, -1, exitCode)
-	}()
-	cancel()
-
-	waitGroup.Wait()
+	assert.Equal(t, 0, exitCode)
 }
 
 func TestRunShell(t *testing.T) {
 	t.Run("env test", func(t *testing.T) {
-		receiveOutput := make(chan string, 100)
 		env := map[string]string{
 			"a": "b",
 		}
+		receiveOutput, wait := exec.RunShell("env", env, "", false)
+
 		var waitGroup sync.WaitGroup
 		waitGroup.Add(1)
 		go func() {
@@ -49,16 +36,15 @@ func TestRunShell(t *testing.T) {
 			}
 			assert.True(t, exist)
 		}()
-		exitCode := exec.RunShell("env", receiveOutput, env, "", false)
-		close(receiveOutput)
-		assert.Equal(t, 0, exitCode)
+		assert.Equal(t, 0, wait())
 		waitGroup.Wait()
 	})
+
 	t.Run("error test", func(t *testing.T) {
-		receiveOutput := make(chan string, 100)
+		receiveOutput, wait := exec.RunShell("commandError", nil, "", false)
+
 		var waitGroup sync.WaitGroup
 		waitGroup.Add(1)
-		command := "commandError"
 		go func() {
 			defer waitGroup.Done()
 			var res string
@@ -68,10 +54,7 @@ func TestRunShell(t *testing.T) {
 			assert.Contains(t, res, "commandError: command not found")
 		}()
 
-		_ = exec.RunShell(command, receiveOutput, nil, "", false)
-		close(receiveOutput)
+		assert.Equal(t, 127, wait())
 		waitGroup.Wait()
-		// assert.Equal(t, 0, exitCode)
-
 	})
 }
