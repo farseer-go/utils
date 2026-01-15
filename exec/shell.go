@@ -11,8 +11,22 @@ import (
 	"syscall"
 
 	"github.com/farseer-go/collections"
+	"github.com/farseer-go/fs/async"
 	"github.com/farseer-go/utils/str"
 )
+
+// 当调用完RunShell后，希望将结果写入到progress中
+func SaveToChan(progress chan string, receiveOutput chan string, wait func() int) int {
+	worker := async.New()
+	worker.Add(func() {
+		for output := range receiveOutput {
+			progress <- output
+		}
+	})
+	defer worker.Wait()
+
+	return wait()
+}
 
 // RunShellCommand 执行shell命令（同步版本，等待命令执行完成）
 // command：要执行的命令
@@ -24,19 +38,15 @@ func RunShellCommand(command string, environment map[string]string, workingDirec
 
 	lstResult := collections.NewList[string]()
 	// 异步接收消息
-	var waitGroup sync.WaitGroup
-	waitGroup.Add(1)
-	go func() {
-		defer waitGroup.Done()
+	worker := async.New()
+	worker.Add(func() {
 		for output := range receiveOutput {
 			lstResult.Add(output)
 		}
-	}()
+	})
+	defer worker.Wait()
 
-	exitCode := wait()
-	waitGroup.Wait()
-
-	return lstResult, exitCode
+	return lstResult, wait()
 }
 
 // RunShell 执行shell命令（异步版本，立即返回）
