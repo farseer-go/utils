@@ -17,15 +17,23 @@ import (
 
 // 当调用完RunShell后，希望将结果写入到progress中
 func SaveToChan(progress chan string, receiveOutput chan string, wait func() int) int {
-	worker := async.New()
-	worker.Add(func() {
+	// 异步转存消息
+	var waitGroup sync.WaitGroup
+	waitGroup.Add(1)
+
+	go func() {
+		defer waitGroup.Done()
 		for output := range receiveOutput {
 			progress <- output
 		}
-	})
-	defer worker.Wait()
+	}()
 
-	return wait()
+	// 等待命令执行完成
+	exitCode := wait()
+	// 等待消息转存完成
+	waitGroup.Wait()
+
+	return exitCode
 }
 
 // RunShellCommand 执行shell命令（同步版本，等待命令执行完成）
@@ -99,8 +107,10 @@ func runCmdContext(ctx context.Context, command string, args []string, environme
 
 	if err := cmd.Start(); err != nil {
 		receiveOutput <- "执行失败：" + err.Error()
-		close(receiveOutput)
-		return receiveOutput, func() int { return -1 }
+		return receiveOutput, func() int {
+			close(receiveOutput)
+			return -1
+		}
 	}
 
 	var waitGroup sync.WaitGroup
