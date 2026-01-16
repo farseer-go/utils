@@ -17,6 +17,8 @@
 go.sum
 go.work.sum
 go.work
-/test/log/
 *.DS_Store
-test/farseer.yaml
+/_test/log/
+/_test/Farseer.Go/
+/_test/Farseer.Go2/
+/_test/farseer.yaml
