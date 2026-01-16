@@ -1,8 +1,6 @@
 module github.com/farseer-go/utils
 
-go 1.23.0
-
-toolchain go1.23.8
+go 1.18.0
 
 require (
 	github.com/aliyun/alibabacloud-oss-go-sdk-v2 v1.2.0
