@@ -46,7 +46,7 @@ func TestCloudflare(t *testing.T) {
 
 	flog.Infof("=======================添加自定义主机=======================")
 	hostName := "testdcv3." + testDomain
-	success, dnsId, dcvDnsId, customHostnameId, err := client.CreateCustomHostnameAndVerify(testZoneId, testZoneId, hostName, "ddns."+testDomain)
+	success, dnsId, dcvDnsId, customHostnameId, err := client.CreateCustomHostnameAndVerify(testZoneId, testZoneId, hostName, "ddns."+testDomain, "CNAME")
 	assert.Truef(t, success, "添加自定义主机失败:%+v", err)
 
 	// 验证dns解析记录

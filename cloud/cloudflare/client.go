@@ -146,12 +146,13 @@ func (receiver *Client) ZoneList(pageSize, pageIndex int) (Zones, error) {
 // hostNameZoneId 域名的所属的区域ID
 // hostName 自定义主机名，例如：app1.example.com
 // dnsContent DNS记录内容，例如：cn1.example.com （会在dns解析记录中添加一条：CNAME app1.example.com -> cn1.example.com 记录）
-func (receiver *Client) CreateCustomHostnameAndVerify(customHostnameZoneId, hostNameZoneId string, hostName, dnsContent string) (bool, string, string, string, error) {
+// dnsType A或CNAME
+func (receiver *Client) CreateCustomHostnameAndVerify(customHostnameZoneId, hostNameZoneId string, hostName, dnsContent, dnsType string) (bool, string, string, string, error) {
 	customHostnameClient := receiver.NewCustomHostnameClient(customHostnameZoneId)
 	dnsClient := receiver.NewDnsClient(hostNameZoneId)
 
 	// 第1步：添加dns记录 CNAME app1.example.com -> cn1.example.com 记录
-	success, dnsId, _, err := dnsClient.Create("CNAME", hostName, dnsContent, false, 3600, "添加域名"+time.Now().Format("2006-01-02 15:04:05"), true)
+	success, dnsId, _, err := dnsClient.Create(dnsType, hostName, dnsContent, false, 3600, "添加域名"+time.Now().Format("2006-01-02 15:04:05"), true)
 	if !success {
 		return false, dnsId, "", "", err
 	}
@@ -177,9 +178,9 @@ func (receiver *Client) CreateCustomHostnameAndVerify(customHostnameZoneId, host
 }
 
 // 删除自定义主机及对应的验证DNS记录
-func (receiver *Client) DeleteCustomHostnameAndDns(customHostnameZoneId, hostNameZoneId string, hostName string) (bool, error) {
+func (receiver *Client) DeleteCustomHostnameAndDns(customHostnameZoneId, dnsZoneId string, hostName string) (bool, error) {
 	customHostnameClient := receiver.NewCustomHostnameClient(customHostnameZoneId)
-	dnsClient := receiver.NewDnsClient(hostNameZoneId)
+	dnsClient := receiver.NewDnsClient(dnsZoneId)
 
 	// 第1步：删除dns记录
 	dnsClient.DeleteByDomain(hostName)
