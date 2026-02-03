@@ -129,45 +129,48 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 		proxyAddr = ConvertSocks5(proxyAddr)
 		fastHttpClient.Dial = fasthttpproxy.FasthttpSocksDialer(proxyAddr)
 	}
+	traceDetail.TraceDetailHttp.SetRequest(requestUrl, head, bodyVal)
+
 	var err error
 	if requestTimeout > 0 {
 		err = fastHttpClient.DoTimeout(request, response, time.Duration(requestTimeout)*time.Millisecond)
 	} else {
 		err = fastHttpClient.Do(request, response)
 	}
+	defer func() { traceDetail.End(err) }()
 
 	if err != nil {
 		return "", 0, nil, err
 	}
 
 	// 响应头部
-	responseHeader := make(map[string]string)
+	rspHeader := make(map[string]string)
 	for _, keyBytes := range response.Header.PeekKeys() {
-		responseHeader[string(keyBytes)] = string(response.Header.PeekBytes(keyBytes))
+		rspHeader[string(keyBytes)] = string(response.Header.PeekBytes(keyBytes))
 	}
 	// cookies
 	response.Header.VisitAllCookie(func(key, value []byte) {
-		responseHeader[string(key)] = string(value)
+		rspHeader[string(key)] = string(value)
 	})
-	responseHeader["Content-Type"] = string(response.Header.ContentType())
+	rspHeader["Content-Type"] = string(response.Header.ContentType())
 
 	// 返回的body内容
-	var responseBytes []byte
+	var rspBytes []byte
 	// 解压缩
 	responseContentEncoding := string(response.Header.ContentEncoding())
 	switch responseContentEncoding {
 	case "gzip":
 		bodyReader, _ := gzip.NewReader(bytes.NewReader(response.Body()))
-		responseBytes, _ = ioutil.ReadAll(bodyReader)
+		rspBytes, _ = ioutil.ReadAll(bodyReader)
 	case "deflate":
 		bodyReader := flate.NewReader(bytes.NewReader(response.Body()))
-		responseBytes, _ = ioutil.ReadAll(bodyReader)
+		rspBytes, _ = ioutil.ReadAll(bodyReader)
 	default:
-		responseBytes = response.Body()
+		rspBytes = response.Body()
 	}
 
 	// 找到对应的响应编码
-	e, name, certain := charset.DetermineEncoding(responseBytes, contentType)
+	e, name, certain := charset.DetermineEncoding(rspBytes, contentType)
 
 	//charset := ""
 	//for _, ctypes := range strings.Split(responseHeader["Content-Type"], ";") {
@@ -178,30 +181,29 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 	//	}
 	//}
 
-	var bodyContent string
+	var rspBodyContent string
 	switch name { // strings.ToLower(charset)
 	case "big5":
-		responseBytes, _ = traditionalchinese.Big5.NewDecoder().Bytes(responseBytes)
+		rspBytes, _ = traditionalchinese.Big5.NewDecoder().Bytes(rspBytes)
 	default:
 		if !certain || name != "utf-8" {
 			// 使用新的decder来解析网页内容
-			bodyReader := transform.NewReader(bytes.NewReader(responseBytes), e.NewDecoder())
-			responseBytes, _ = io.ReadAll(bodyReader)
+			bodyReader := transform.NewReader(bytes.NewReader(rspBytes), e.NewDecoder())
+			rspBytes, _ = io.ReadAll(bodyReader)
 		}
 	}
 
-	bodyContent = string(responseBytes)
+	rspBodyContent = string(rspBytes)
 
 	// 链路追踪设置出入参
-	traceDetail.TraceDetailHttp.SetHttpRequest(requestUrl, head, responseHeader, bodyVal, bodyContent, response.StatusCode())
-	defer func() { traceDetail.End(err) }()
+	traceDetail.TraceDetailHttp.SetResponse(rspHeader, rspBodyContent, response.StatusCode())
 
 	if err != nil {
 		return "", 0, nil, err
 	}
 
 	// 30X跳转
-	if location := responseHeader["Location"]; bodyContent == "" && location != "" {
+	if location := rspHeader["Location"]; rspBodyContent == "" && location != "" {
 		if !strings.HasPrefix(location, "http") {
 			uri := request.URI()
 			if location[0] == '/' {
@@ -219,7 +221,7 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 		}
 	}
 
-	return bodyContent, response.StatusCode(), responseHeader, nil
+	return rspBodyContent, response.StatusCode(), rspHeader, nil
 }
 
 func urlValuesToString(body url.Values, contentType string) string {
