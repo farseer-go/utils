@@ -3,8 +3,10 @@ package cloudflare
 import (
 	"errors"
 	"fmt"
+	"sync"
 	"time"
 
+	"github.com/farseer-go/fs/async"
 	"github.com/farseer-go/fs/snc"
 	"github.com/farseer-go/utils/http"
 )
@@ -16,10 +18,11 @@ type CustomHostnameClient struct {
 }
 
 // 缓存dcv uuid，避免重复请求，同一个zoneId只请求1次
-var mDcvUuidCache = make(map[string]string)
+var mDcvUuidCache sync.Map
+var single async.Single
 
 // 缓存自定义主机ID，避免重复请求
-var mCustomHostNameIdCache = make(map[string]string)
+var mCustomHostNameIdCache sync.Map
 
 func (receiver *Client) NewCustomHostnameClient(zoneId string) *CustomHostnameClient {
 	return &CustomHostnameClient{
@@ -91,7 +94,7 @@ func (receiver *CustomHostnameClient) List(search string, pageSize, pageIndex in
 
 	// 缓存自定义主机ID
 	for _, customHostname := range customHostnames.Result {
-		mCustomHostNameIdCache[customHostname.Hostname] = customHostname.ID
+		mCustomHostNameIdCache.Store(customHostname.Hostname, customHostname.ID)
 	}
 	return customHostnames, err
 }
@@ -159,7 +162,7 @@ func (receiver *CustomHostnameClient) Create(hostname string) (bool, string, err
 	}
 
 	// 缓存自定义主机ID
-	mCustomHostNameIdCache[hostname] = result.Result.ID
+	mCustomHostNameIdCache.Store(hostname, result.Result.ID)
 
 	if len(result.Messages) > 0 {
 		return result.Success, result.Result.ID, err
@@ -242,10 +245,10 @@ func (receiver *CustomHostnameClient) Delete(customHostnameId string) (bool, err
 // 删除自定义主机（通过主机名删除）
 func (receiver *CustomHostnameClient) DeleteByHostName(hostname string) (bool, error) {
 	// 通过缓存获取自定义主机ID
-	customHostnameId := mCustomHostNameIdCache[hostname]
-	if customHostnameId == "" {
+	customHostnameId, exists := mCustomHostNameIdCache.Load(hostname)
+	if !exists {
 		// 如果缓存没有，则通过API获取
-		customHostnames, err := receiver.List(hostname, 100, 1)
+		customHostnames, err := receiver.List(hostname, 1000, 1)
 		if err != nil {
 			return false, err
 		}
@@ -260,7 +263,8 @@ func (receiver *CustomHostnameClient) DeleteByHostName(hostname string) (bool, e
 		}
 	}
 
-	return receiver.Delete(customHostnameId)
+	customHostnameIdStr, _ := customHostnameId.(string)
+	return receiver.Delete(customHostnameIdStr)
 }
 
 // 获取dcv的uuid
@@ -293,17 +297,26 @@ type DcvCName struct {
 	Value string
 }
 
-// 得到Dcv CNAME记录的值
+// GetDcvCName 得到Dcv CNAME记录的值
 func (receiver *CustomHostnameClient) GetDcvCName(hostName string) DcvCName {
-	// 通过api读取uuid
-	if mDcvUuidCache[receiver.ZoneId] == "" {
-		mDcvUuidCache[receiver.ZoneId], _ = receiver.GetDcvUuid()
+	uuid, exists := mDcvUuidCache.Load(receiver.ZoneId)
+	// 如果缓存中没有值，则进入初始化逻辑
+	if !exists {
+		uuid, _ = single.Do(receiver.ZoneId, func() (any, error) {
+			val, _ := receiver.GetDcvUuid()
+			if val != "" {
+				mDcvUuidCache.Store(receiver.ZoneId, val)
+			}
+			return val, nil
+		})
 	}
+
+	uuidStr, _ := uuid.(string)
 	// _acme-challenge.<hostname> CNAME <hostname>.uuid.dcv.cloudflare.com
 	return DcvCName{
-		Uuid:  mDcvUuidCache[receiver.ZoneId],
+		Uuid:  uuidStr,
 		Type:  "CNAME",
 		Name:  fmt.Sprintf("_acme-challenge.%s", hostName),
-		Value: fmt.Sprintf("%s.%s.dcv.cloudflare.com", hostName, mDcvUuidCache[receiver.ZoneId]),
+		Value: fmt.Sprintf("%s.%s.dcv.cloudflare.com", hostName, uuidStr),
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/farseer-go/fs/snc"
@@ -17,7 +18,7 @@ type DnsClient struct {
 }
 
 // 缓存dnsId，避免重复请求，同一个dnsId只请求1次
-var mDnsIdCache = make(map[string]string)
+var mDnsIdCache sync.Map
 
 func (receiver *Client) NewDnsClient(zoneId string) *DnsClient {
 	return &DnsClient{
@@ -81,7 +82,7 @@ func (receiver *DnsClient) List(search string, pageSize, pageIndex int) (Dnss, e
 
 	// 缓存dnsId，避免重复请求
 	for _, dns := range dnss.Result {
-		mDnsIdCache[dns.Name] = dns.ID
+		mDnsIdCache.Store(dns.Name, dns.ID)
 	}
 	return dnss, err
 }
@@ -150,7 +151,7 @@ func (receiver *DnsClient) Create(recordType string, domain string, ipOrContent 
 		// 查询现有记录ID
 		listResult, _ := receiver.List(domain, 100, 1)
 		for _, record := range listResult.Result {
-			mDnsIdCache[record.Name] = record.ID
+			mDnsIdCache.Store(record.Name, record.ID)
 
 			// 如果记录一样，则直接返回成功
 			if record.Type == recordType && record.Content == ipOrContent && record.Proxied == proxied {
@@ -170,7 +171,7 @@ func (receiver *DnsClient) Create(recordType string, domain string, ipOrContent 
 		return result.Success, result.Result.ID, result.Errors[0].Code, errors.New(result.Errors[0].Message)
 	}
 
-	mDnsIdCache[domain] = result.Result.ID
+	mDnsIdCache.Store(domain, result.Result.ID)
 	if len(result.Messages) > 0 {
 		return result.Success, result.Result.ID, result.Messages[0].Code, err
 	}
@@ -242,7 +243,7 @@ func (receiver *DnsClient) Update(recordId string, recordType string, domain str
 		return result.Success, result.Errors[0].Code, errors.New(result.Errors[0].Message)
 	}
 
-	mDnsIdCache[domain] = recordId
+	mDnsIdCache.Store(domain, recordId)
 	if len(result.Messages) > 0 {
 		return result.Success, result.Messages[0].Code, err
 	}
@@ -321,14 +322,22 @@ func (receiver *DnsClient) Info(recordId string) (DnsDetial, error) {
 
 // 根据域名获取dnsId
 func (receiver *DnsClient) GetDnsIdByDomain(domain string) (string, error) {
+	var dnsIdStr string
 	// 先从缓存获取
-	if dnsId, exists := mDnsIdCache[domain]; exists && dnsId != "" {
-		return dnsId, nil
-	}
-	listResult, err := receiver.List(domain, 100, 1)
-	for _, record := range listResult.Result {
-		mDnsIdCache[record.Name] = record.ID
+	if dnsId, exists := mDnsIdCache.Load(domain); exists {
+		if dnsIdStr, _ = dnsId.(string); dnsIdStr != "" {
+			return dnsIdStr, nil
+		}
 	}
 
-	return mDnsIdCache[domain], err
+	// 重新缓存
+	listResult, err := receiver.List(domain, 1000, 1)
+	for _, record := range listResult.Result {
+		mDnsIdCache.Store(record.Name, record.ID)
+		if record.Name == domain {
+			dnsIdStr = record.ID
+		}
+	}
+
+	return dnsIdStr, err
 }

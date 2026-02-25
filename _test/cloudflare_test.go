@@ -75,8 +75,8 @@ func TestCloudflare(t *testing.T) {
 
 	// 删除自定义主机及对应的验证DNS记录
 	flog.Infof("=======================删除自定义主机=======================")
-	success, err = client.DeleteCustomHostnameAndDns(testZoneId, testZoneId, hostName)
-	assert.Truef(t, success, "删除自定义主机失败:%+v", err)
+	err = client.DeleteCustomHostnameAndDns(testZoneId, testZoneId, hostName)
+	assert.Truef(t, err == nil, "删除自定义主机失败:%+v", err)
 
 	// 验证dns解析记录被删除
 	dnsDetail, _ = dnsClient.Info(dnsId)

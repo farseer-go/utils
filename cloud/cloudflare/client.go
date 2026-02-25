@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/farseer-go/fs/async"
 	"github.com/farseer-go/fs/configure"
 	"github.com/farseer-go/fs/snc"
 	"github.com/farseer-go/utils/http"
+	"github.com/farseer-go/utils/operator"
 )
 
 // Cloudflare客户端
@@ -151,44 +153,74 @@ func (receiver *Client) CreateCustomHostnameAndVerify(customHostnameZoneId, host
 	customHostnameClient := receiver.NewCustomHostnameClient(customHostnameZoneId)
 	dnsClient := receiver.NewDnsClient(hostNameZoneId)
 
-	// 第1步：添加dns记录 CNAME app1.example.com -> cn1.example.com 记录
-	success, dnsId, _, err := dnsClient.Create(dnsType, hostName, dnsContent, false, 3600, "添加域名"+time.Now().Format("2006-01-02 15:04:05"), true)
-	if !success {
-		return false, dnsId, "", "", err
-	}
-
-	// 第2步：获取dcv的uuid（自动读取缓存）
+	// 第1步：获取dcv的uuid（自动读取缓存）
 	dcvCName := customHostnameClient.GetDcvCName(hostName)
 	if dcvCName.Uuid == "" {
-		return false, dnsId, "", "", errors.New("获取dcv uuid失败")
+		return false, "", "", "", errors.New("获取dcv uuid失败")
 	}
+	worker := async.New()
+	var success1, success2, success3 bool
+	var dnsId, dcvDnsId, customHostnameId string
+	var err1, err2, err3 error
+
+	// 第2步：添加dns记录 CNAME app1.example.com -> cn1.example.com 记录
+	worker.Add(func() {
+		success1, dnsId, _, err1 = dnsClient.Create(dnsType, hostName, dnsContent, false, 3600, "优选域名："+time.Now().Format("2006-01-02 15:04:05"), true)
+	})
 
 	// 第3步：添加dns dcv ttl记录
-	success, dcvDnsId, _, err := dnsClient.Create(dcvCName.Type, dcvCName.Name, dcvCName.Value, false, 3600, "验证自定义主机ACME"+time.Now().Format("2006-01-02 15:04:05"), true)
-	if !success {
-		return false, dnsId, dcvDnsId, "", err
-	}
+	worker.Add(func() {
+		success2, dcvDnsId, _, err2 = dnsClient.Create(dcvCName.Type, dcvCName.Name, dcvCName.Value, false, 3600, "优选ACME："+time.Now().Format("2006-01-02 15:04:05"), true)
+	})
 
 	// 第4步：添加自定义主机hostName
-	success, customHostnameId, err := customHostnameClient.Create(hostName)
-	if !success {
-		return false, dnsId, dcvDnsId, customHostnameId, err
+	worker.Add(func() {
+		success3, customHostnameId, err3 = customHostnameClient.Create(hostName)
+	})
+
+	worker.Wait()
+
+	// 回滚删除dns记录
+	if operator.ExistsFalse(success1, success2, success3) {
+		if dnsId != "" {
+			dnsClient.Delete(dnsId)
+		}
+		if dcvDnsId != "" {
+			dnsClient.Delete(dcvDnsId)
+		}
+		if customHostnameId != "" {
+			customHostnameClient.Delete(customHostnameId)
+		}
+
+		err := operator.GetNotNil(err1, err2, err3)
+		return false, "", "", "", err
 	}
-	return success, dnsId, dcvDnsId, customHostnameId, err
+
+	return true, dnsId, dcvDnsId, customHostnameId, nil
 }
 
 // 删除自定义主机及对应的验证DNS记录
-func (receiver *Client) DeleteCustomHostnameAndDns(customHostnameZoneId, dnsZoneId string, hostName string) (bool, error) {
+func (receiver *Client) DeleteCustomHostnameAndDns(customHostnameZoneId, dnsZoneId string, hostName string) error {
 	customHostnameClient := receiver.NewCustomHostnameClient(customHostnameZoneId)
 	dnsClient := receiver.NewDnsClient(dnsZoneId)
 
+	worker := async.New()
 	// 第1步：删除dns记录
-	dnsClient.DeleteByDomain(hostName)
+	worker.Add(func() {
+		dnsClient.DeleteByDomain(hostName)
+	})
+
 	// 第2步：删除dcv cname记录
-	dcvCName := customHostnameClient.GetDcvCName(hostName)
-	if dcvCName.Uuid != "" {
-		dnsClient.DeleteByDomain(dcvCName.Name)
-	}
+	worker.Add(func() {
+		dcvCName := customHostnameClient.GetDcvCName(hostName)
+		if dcvCName.Uuid != "" {
+			dnsClient.DeleteByDomain(dcvCName.Name)
+		}
+	})
 	// 第3步：删除自定义主机
-	return customHostnameClient.DeleteByHostName(hostName)
+	worker.Add(func() {
+		customHostnameClient.DeleteByHostName(hostName)
+	})
+
+	return worker.Wait()
 }
