@@ -20,7 +20,7 @@ type Resource struct {
 	CpuMhz             float64        // CPU总赫兹
 	CpuCores           int            // CPU核心数
 	CpuUsagePercent    float64        // CPU使用百分比
-	MemoryTotal        uint64         // 总内存
+	MemoryTotal        uint64         // 总内存（B）
 	MemoryAvailable    uint64         // 内存可用量（B）
 	MemoryUsage        uint64         // 内存已使用（B）
 	MemoryUsagePercent float64        // 内存使用百分比
