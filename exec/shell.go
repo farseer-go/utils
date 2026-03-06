@@ -41,8 +41,9 @@ func SaveToChan(progress chan string, receiveOutput chan string, wait func() int
 // environment：环境变量
 // workingDirectory：当前工作目录位置
 // return：输出行数组 和 exit code
-func RunShellCommand(command string, environment map[string]string, workingDirectory string, outputCmd bool) (collections.List[string], int) {
-	receiveOutput, wait := runCmdContext(context.Background(), "bash", []string{"-c", command}, environment, workingDirectory, outputCmd)
+func RunShellCommand(command string, args []string, environment map[string]string, workingDirectory string, outputCmd bool) (collections.List[string], int) {
+	//receiveOutput, wait := runCmdContext(context.Background(), "bash", []string{"-c", command}, environment, workingDirectory, outputCmd)
+	receiveOutput, wait := runCmdContext(context.Background(), command, args, environment, workingDirectory, outputCmd)
 
 	lstResult := collections.NewList[string]()
 	// 异步接收消息
@@ -62,8 +63,9 @@ func RunShellCommand(command string, environment map[string]string, workingDirec
 // environment：环境变量
 // workingDirectory：当前工作目录位置
 // return：输出流 channel（可实时接收）和 wait 函数（调用后阻塞等待命令完成并返回 exit code）
-func RunShell(command string, environment map[string]string, workingDirectory string, outputCmd bool) (chan string, func() int) {
-	return runCmdContext(context.Background(), "bash", []string{"-c", command}, environment, workingDirectory, outputCmd)
+func RunShell(command string, args []string, environment map[string]string, workingDirectory string, outputCmd bool) (chan string, func() int) {
+	//return runCmdContext(context.Background(), "bash", []string{"-c", command}, environment, workingDirectory, outputCmd)
+	return runCmdContext(context.Background(), command, args, environment, workingDirectory, outputCmd)
 }
 
 // RunShellContext 执行shell命令（支持上下文控制）
@@ -72,8 +74,9 @@ func RunShell(command string, environment map[string]string, workingDirectory st
 // environment：环境变量
 // workingDirectory：当前工作目录位置
 // return：输出流 channel（可实时接收）和 wait 函数（调用后阻塞等待命令完成并返回 exit code）
-func RunShellContext(ctx context.Context, command string, environment map[string]string, workingDirectory string, outputCmd bool) (chan string, func() int) {
-	return runCmdContext(ctx, "bash", []string{"-c", command}, environment, workingDirectory, outputCmd)
+func RunShellContext(ctx context.Context, command string, args []string, environment map[string]string, workingDirectory string, outputCmd bool) (chan string, func() int) {
+	//return runCmdContext(ctx, "bash", []string{"-c", command}, environment, workingDirectory, outputCmd)
+	return runCmdContext(ctx, command, args, environment, workingDirectory, outputCmd)
 }
 
 // runCmdContext 执行命令（内部方法）
@@ -95,7 +98,6 @@ func runCmdContext(ctx context.Context, command string, args []string, environme
 	if outputCmd {
 		receiveOutput <- command + " " + strings.Join(args, " ")
 	}
-
 	cmd := exec.CommandContext(ctx, command, args...)
 	cmd.Dir = workingDirectory
 	// 如果设置了环境变量，则追加进来
