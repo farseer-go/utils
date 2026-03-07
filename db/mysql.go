@@ -12,7 +12,7 @@ import (
 
 // 检查 mysqldump 是否已安装
 func IsMysqldumpInstalled() bool {
-	result, code := exec.RunShellCommand("mysqldump --version", nil, "", false)
+	result, code := exec.RunShellCommand("mysqldump", []string{"--version"}, nil, "", false)
 	if code != 0 || result.Count() == 0 {
 		return false
 	}
@@ -22,7 +22,7 @@ func IsMysqldumpInstalled() bool {
 
 // 安装 mysqldump
 func InstallMysqldump() {
-	exec.RunShellCommand("apk add --no-cache mariadb-client", nil, "", false)
+	exec.RunShellCommand("apk", []string{"add", "--no-cache", "mariadb-client"}, nil, "", false)
 }
 
 // 备份历史数据
@@ -40,8 +40,9 @@ func BackupMysql(host string, port int, username, password, database string, fil
 		InstallMysqldump()
 	}
 
-	mysqldumpCmd := fmt.Sprintf("mysqldump -h %s -P %d -u%s -p%s %s | gzip > %s", host, port, username, password, database, fileName)
-	result, code := exec.RunShellCommand(mysqldumpCmd, nil, "", false)
+	cmd := fmt.Sprintf("mysqldump -h %s -P %d -u%s -p%s %s | gzip > %s", host, port, username, password, database, fileName)
+	args := []string{"-c", cmd}
+	result, code := exec.RunShellCommand("sh", args, nil, "", false)
 	// 备份失败时删除备份文件
 	if code != 0 {
 		file.Delete(fileName)
@@ -64,19 +65,25 @@ func RecoverMysql(host string, port int, username, password, database string, fi
 	path := filepath.Dir(fileName)
 	fileExt := filepath.Ext(fileName)
 
-	var cmd string
+	var args []string
 	switch fileExt {
 	case ".gz":
-		cmd = fmt.Sprintf("gzip -dc %s | mysql -h %s -P %d -u%s -p%s %s", filepath.Base(fileName), host, port, username, password, database)
+		// 管道操作需要通过 shell 执行
+		cmd := fmt.Sprintf("gzip -dc %s | mysql -h %s -P %d -u%s -p%s %s",
+			filepath.Base(fileName), host, port, username, password, database)
+		args = []string{"-c", cmd}
 	case ".sql":
-		cmd = fmt.Sprintf("mysql -h %s -P %d -u%s -p%s %s < %s", host, port, username, password, database, fileName)
+		// 重定向操作需要通过 shell 执行
+		cmd := fmt.Sprintf("mysql -h %s -P %d -u%s -p%s %s < %s",
+			host, port, username, password, database, fileName)
+		args = []string{"-c", cmd}
 	default:
 		return fmt.Errorf("未知的扩展名：%s", fileExt)
 	}
 
-	result, code := exec.RunShellCommand(cmd, nil, path, false)
+	result, code := exec.RunShellCommand("sh", args, nil, path, false)
 	if code != 0 {
-		return fmt.Errorf("还原SQL文件：%s 时失败：%s", cmd, result.ToString(","))
+		return fmt.Errorf("还原SQL文件失败：%s", result.ToString(","))
 	}
 	return nil
 }
