@@ -9,8 +9,9 @@ import (
 )
 
 func TestRunShellContext(t *testing.T) {
-	receiveOutput, exitCode := exec.RunShellCommand("Sleep 1", nil, "", true)
-	assert.Equal(t, "bash -c Sleep 1", receiveOutput.First())
+	wait := exec.RunShell("Sleep 1", nil, "", true)
+	receiveOutput, exitCode := wait.WaitToFirstResult()
+	assert.Equal(t, "bash -c Sleep 1", receiveOutput)
 	assert.Equal(t, 0, exitCode)
 }
 

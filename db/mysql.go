@@ -12,7 +12,8 @@ import (
 
 // 检查 mysqldump 是否已安装
 func IsMysqldumpInstalled() bool {
-	result, code := exec.RunShellCommand("mysqldump", []string{"--version"}, nil, "", false)
+	wait := exec.RunShell("mysqldump", []string{"--version"}, nil, "", false)
+	result, code := wait.WaitToList()
 	if code != 0 || result.Count() == 0 {
 		return false
 	}
@@ -22,7 +23,7 @@ func IsMysqldumpInstalled() bool {
 
 // 安装 mysqldump
 func InstallMysqldump() {
-	exec.RunShellCommand("apk", []string{"add", "--no-cache", "mariadb-client"}, nil, "", false)
+	exec.RunShell("apk", []string{"add", "--no-cache", "mariadb-client"}, nil, "", false)
 }
 
 // 备份历史数据
@@ -42,7 +43,8 @@ func BackupMysql(host string, port int, username, password, database string, fil
 
 	cmd := fmt.Sprintf("mysqldump -h %s -P %d -u%s -p%s %s | gzip > %s", host, port, username, password, database, fileName)
 	args := []string{"-c", cmd}
-	result, code := exec.RunShellCommand("sh", args, nil, "", false)
+	wait := exec.RunShell("sh", args, nil, "", false)
+	result, code := wait.WaitToList()
 	// 备份失败时删除备份文件
 	if code != 0 {
 		file.Delete(fileName)
@@ -81,7 +83,8 @@ func RecoverMysql(host string, port int, username, password, database string, fi
 		return fmt.Errorf("未知的扩展名：%s", fileExt)
 	}
 
-	result, code := exec.RunShellCommand("sh", args, nil, path, false)
+	wait := exec.RunShell("sh", args, nil, path, false)
+	result, code := wait.WaitToList()
 	if code != 0 {
 		return fmt.Errorf("还原SQL文件失败：%s", result.ToString(","))
 	}
