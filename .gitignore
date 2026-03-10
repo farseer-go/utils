@@ -21,4 +21,4 @@ go.work
 /_test/log/
 /_test/Farseer.Go/
 /_test/Farseer.Go2/
-/_test/farseer.yaml
+/_test/config.yaml
