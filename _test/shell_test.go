@@ -9,7 +9,7 @@ import (
 )
 
 func TestRunShellContext(t *testing.T) {
-	wait := exec.RunShell("Sleep 1", nil, "", true)
+	wait := exec.RunShell("Sleep", []string{"1"}, nil, "", true)
 	receiveOutput, exitCode := wait.WaitToFirstResult()
 	assert.Equal(t, "bash -c Sleep 1", receiveOutput)
 	assert.Equal(t, 0, exitCode)
@@ -20,7 +20,9 @@ func TestRunShell(t *testing.T) {
 		env := map[string]string{
 			"a": "b",
 		}
-		receiveOutput, wait := exec.RunShell("env", env, "", false)
+		wait := exec.RunShell("env", nil, env, "", false)
+		receiveOutput := make(chan string, 10000)
+		code := wait.WaitToChan(receiveOutput)
 
 		worker := async.New()
 		worker.Add(func() {
@@ -32,12 +34,14 @@ func TestRunShell(t *testing.T) {
 			}
 			assert.True(t, exist)
 		})
-		assert.Equal(t, 0, wait())
+		assert.Equal(t, 0, code)
 		worker.Wait()
 	})
 
 	t.Run("error test", func(t *testing.T) {
-		receiveOutput, wait := exec.RunShell("commandError", nil, "", false)
+		wait := exec.RunShell("commandError", nil, nil, "", false)
+		receiveOutput := make(chan string, 10000)
+		code := wait.WaitToChan(receiveOutput)
 
 		worker := async.New()
 		worker.Add(func() {
@@ -48,7 +52,7 @@ func TestRunShell(t *testing.T) {
 			assert.Contains(t, res, "commandError: command not found")
 		})
 
-		assert.Equal(t, 127, wait())
+		assert.Equal(t, 127, code)
 		worker.Wait()
 	})
 }

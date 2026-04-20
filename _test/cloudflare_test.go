@@ -40,7 +40,7 @@ func TestCloudflare(t *testing.T) {
 	dnsClient := client.NewDnsClient(testZoneId)
 	dnss, _ := dnsClient.List("", 100, 1)
 	for _, dns := range dnss.Result {
-		flog.Infof(fmt.Sprintf("[%s] %s %s", dns.Type, dns.Name, dns.Content))
+		flog.Infof("%s", fmt.Sprintf("[%s] %s %s", dns.Type, dns.Name, dns.Content))
 	}
 	assert.Greaterf(t, len(dnss.Result), 0, "测试域名下未找到任何DNS记录，请确保在Cloudflare中有对应域名的DNS记录")
 
@@ -64,14 +64,14 @@ func TestCloudflare(t *testing.T) {
 	customHostnameClient := client.NewCustomHostnameClient(testZoneId)
 	customHostnames, err := customHostnameClient.List("", 100, 1)
 	for _, customHostname := range customHostnames.Result {
-		flog.Infof(fmt.Sprintf("%s [%s] %s %s", customHostname.ID, customHostname.Status, customHostname.Hostname, customHostname.Ssl.Status))
+		flog.Infof("%s", fmt.Sprintf("%s [%s] %s %s", customHostname.ID, customHostname.Status, customHostname.Hostname, customHostname.Ssl.Status))
 	}
 
 	// 验证自定义主机记录
 	flog.Infof("=======================等待20秒后验证自定义主机记录=======================")
 	time.Sleep(20 * time.Second)
 	customHostnameDetial, err := customHostnameClient.Info(customHostnameId)
-	flog.Infof(fmt.Sprintf("%s [%s] 主机状态：%s 证书状态：%s", customHostnameId, customHostnameDetial.Result.Hostname, customHostnameDetial.Result.Status, customHostnameDetial.Result.Ssl.Status))
+	flog.Infof("%s", fmt.Sprintf("%s [%s] 主机状态：%s 证书状态：%s", customHostnameId, customHostnameDetial.Result.Hostname, customHostnameDetial.Result.Status, customHostnameDetial.Result.Ssl.Status))
 
 	// 删除自定义主机及对应的验证DNS记录
 	flog.Infof("=======================删除自定义主机=======================")
@@ -98,7 +98,7 @@ func TestCloudflare(t *testing.T) {
 	assert.Truef(t, success1, "添加dns记录失败:%+v", err1)
 
 	dns1, _ := dnsClient.Info(id1)
-	flog.Infof(fmt.Sprintf("%s [%s] %s %s", dns1.Result.ID, dns1.Result.Type, dns1.Result.Name, dns1.Result.Content))
+	flog.Infof("%s", fmt.Sprintf("%s [%s] %s %s", dns1.Result.ID, dns1.Result.Type, dns1.Result.Name, dns1.Result.Content))
 	assert.Equal(t, "test1."+testDomain, dns1.Result.Name)
 	assert.Equal(t, "127.0.0.1", dns1.Result.Content)
 
@@ -107,7 +107,7 @@ func TestCloudflare(t *testing.T) {
 	assert.Truef(t, success2, "修改dns记录失败:%+v", err2)
 
 	dns2, _ := dnsClient.Info(id1)
-	flog.Infof(fmt.Sprintf("%s [%s] %s %s", dns2.Result.ID, dns2.Result.Type, dns2.Result.Name, dns2.Result.Content))
+	flog.Infof("%s", fmt.Sprintf("%s [%s] %s %s", dns2.Result.ID, dns2.Result.Type, dns2.Result.Name, dns2.Result.Content))
 	assert.Equal(t, "test2."+testDomain, dns2.Result.Name)
 	assert.Equal(t, "www."+testDomain, dns2.Result.Content)
 
