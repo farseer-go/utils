@@ -23,8 +23,13 @@ func IsMysqldumpInstalled() bool {
 }
 
 // 安装 mysqldump
-func InstallMysqldump() {
-	exec.RunShell("apk", []string{"add", "--no-cache", "mariadb-client"}, nil, "", false)
+func InstallMysqldump() error {
+	wait := exec.RunShell("apk", []string{"add", "--no-cache", "mariadb-client"}, nil, "", false)
+	result, code := wait.WaitToList()
+	if code != 0 {
+		return fmt.Errorf("安装 mariadb-client 失败（exit=%d）：%s", code, result.ToString(","))
+	}
+	return nil
 }
 
 // 备份历史数据
@@ -39,7 +44,12 @@ type FileObject struct {
 func BackupMysql(host string, port int, username, password, database string, fileName string) (int64, error) {
 	// 安装 mysqldump
 	if !IsMysqldumpInstalled() {
-		InstallMysqldump()
+		if err := InstallMysqldump(); err != nil {
+			return 0, err
+		}
+		if !IsMysqldumpInstalled() {
+			return 0, fmt.Errorf("mysqldump 未安装，且自动安装后仍未找到（当前镜像可能非 alpine，需手动安装 mariadb-client/mysql-client）")
+		}
 	}
 
 	// pipefail：管道中任一命令失败都反映到退出码，避免 mysqldump 失败但 gzip 成功时被误判为 0
@@ -90,7 +100,12 @@ func BackupMysql(host string, port int, username, password, database string, fil
 func RecoverMysql(host string, port int, username, password, database string, fileName string) error {
 	// 安装 mysqldump
 	if !IsMysqldumpInstalled() {
-		InstallMysqldump()
+		if err := InstallMysqldump(); err != nil {
+			return err
+		}
+		if !IsMysqldumpInstalled() {
+			return fmt.Errorf("mysqldump 未安装，且自动安装后仍未找到（当前镜像可能非 alpine，需手动安装 mariadb-client/mysql-client）")
+		}
 	}
 
 	path := filepath.Dir(fileName)
