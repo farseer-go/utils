@@ -41,7 +41,9 @@ func BackupMysql(host string, port int, username, password, database string, fil
 		InstallMysqldump()
 	}
 
-	cmd := fmt.Sprintf("mysqldump -h %s -P %d -u%s -p%s %s | gzip > %s", host, port, username, password, database, fileName)
+	// pipefail：管道中任一命令失败都反映到退出码，避免 mysqldump 失败但 gzip 成功时被误判为 0
+	// 2>&1：合并 mysqldump 的 stderr，便于 WaitToList 捕获真实错误
+	cmd := fmt.Sprintf("set -o pipefail; mysqldump -h %s -P %d -u%s -p%s %s 2>&1 | gzip > %s", host, port, username, password, database, fileName)
 	args := []string{"-c", cmd}
 	wait := exec.RunShell("sh", args, nil, "", false)
 	result, code := wait.WaitToList()
@@ -53,6 +55,11 @@ func BackupMysql(host string, port int, username, password, database string, fil
 	fileInfo, err := os.Stat(fileName)
 	if err != nil {
 		return 0, fmt.Errorf("获取备份文件信息:%s,失败： %s", fileName, err.Error())
+	}
+	// 兜底：某些 sh 实现对 pipefail 支持不佳，空文件视为失败
+	if fileInfo.Size() == 0 {
+		file.Delete(fileName)
+		return 0, fmt.Errorf("备份%s数据库失败：生成文件为空，%s", database, result.ToString(","))
 	}
 	return fileInfo.Size() / 1024, nil
 }
