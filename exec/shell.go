@@ -146,7 +146,11 @@ func (receiver *ShellWait) WaitToFirstResult() (string, int) {
 // workingDirectory：当前工作目录位置
 // return：输出流 channel（可实时接收）和 wait 函数（调用后阻塞等待命令完成并返回 exit code）
 func RunShell(command string, args []string, environment map[string]string, workingDirectory string, outputCmd bool) ShellWait {
-	return runCmdContext(context.Background(), command, args, environment, workingDirectory, outputCmd)
+	return runCmdContext(context.Background(), command, args, environment, workingDirectory, outputCmd, "")
+}
+
+func RunShellInput(command string, args []string, environment map[string]string, workingDirectory string, outputCmd bool, input string) ShellWait {
+	return runCmdContext(context.Background(), command, args, environment, workingDirectory, outputCmd, input)
 }
 
 // RunShellContext 执行shell命令（支持上下文控制）
@@ -157,7 +161,11 @@ func RunShell(command string, args []string, environment map[string]string, work
 // return：输出流 channel（可实时接收）和 wait 函数（调用后阻塞等待命令完成并返回 exit code）
 func RunShellContext(ctx context.Context, command string, args []string, environment map[string]string, workingDirectory string, outputCmd bool) ShellWait {
 	//return runCmdContext(ctx, "bash", []string{"-c", command}, environment, workingDirectory, outputCmd)
-	return runCmdContext(ctx, command, args, environment, workingDirectory, outputCmd)
+	return runCmdContext(ctx, command, args, environment, workingDirectory, outputCmd, "")
+}
+
+func RunShellContextInput(ctx context.Context, command string, args []string, environment map[string]string, workingDirectory string, outputCmd bool, input string) ShellWait {
+	return runCmdContext(ctx, command, args, environment, workingDirectory, outputCmd, input)
 }
 
 // runCmdContext 执行命令（内部方法）
@@ -173,7 +181,7 @@ func RunShellContext(ctx context.Context, command string, args []string, environ
 //   - 命令已启动，输出会实时发送到 channel
 //   - 调用 wait() 函数会阻塞直到命令执行完成，并关闭 channel
 //   - 外部可以选择何时调用 wait()，从而控制同步/异步行为
-func runCmdContext(ctx context.Context, command string, args []string, environment map[string]string, workingDirectory string, outputCmd bool) ShellWait {
+func runCmdContext(ctx context.Context, command string, args []string, environment map[string]string, workingDirectory string, outputCmd bool, input string) ShellWait {
 	receiveOutput := make(chan string, 100)
 
 	if outputCmd {
@@ -181,12 +189,12 @@ func runCmdContext(ctx context.Context, command string, args []string, environme
 	}
 	cmd := exec.CommandContext(ctx, command, args...)
 	cmd.Dir = workingDirectory
-	// 如果设置了环境变量，则追加进来
-	if environment != nil {
-		cmd.Env = append(os.Environ(), str.MapToStringList(environment)...)
-	}
+	cmd.Env = mergeEnv(environment)
 	stdout, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
+	if input != "" {
+		cmd.Stdin = strings.NewReader(input)
+	}
 
 	if err := cmd.Start(); err != nil {
 		return NewExitShellWait(-1, "执行失败："+err.Error())
@@ -227,6 +235,38 @@ func runCmdContext(ctx context.Context, command string, args []string, environme
 			return res
 		},
 	}
+}
+
+func mergeEnv(environment map[string]string) []string {
+	if environment == nil {
+		return os.Environ()
+	}
+
+	envMap := map[string]string{}
+	keys := make([]string, 0)
+	for _, item := range os.Environ() {
+		key, value, ok := strings.Cut(item, "=")
+		if !ok {
+			continue
+		}
+		if _, exists := envMap[key]; !exists {
+			keys = append(keys, key)
+		}
+		envMap[key] = value
+	}
+
+	for key, value := range environment {
+		if _, exists := envMap[key]; !exists {
+			keys = append(keys, key)
+		}
+		envMap[key] = value
+	}
+
+	result := make([]string, 0, len(keys))
+	for _, key := range keys {
+		result = append(result, key+"="+envMap[key])
+	}
+	return result
 }
 
 func readInputStream(out io.ReadCloser, receiveOutput chan string, waitGroup *sync.WaitGroup) {
