@@ -16,15 +16,19 @@ import (
 	"golang.org/x/net/websocket"
 )
 
+// 默认写超时时间，防止半开连接(对端无 RST)时 conn.Write 长时间不返回，导致永远不触发重连
+const defaultWriteTimeout = 10 * time.Second
+
 // Client websocket 客户端
 type Client struct {
-	config   *websocket.Config // 客户端配置
-	conn     *websocket.Conn   // 客户端连接
-	isClose  bool              // 是否断开连接
-	Ctx      ctx.Context       // 用于通知应用端是否断开连接
-	cancel   ctx.CancelFunc    // 用于通知Ctx，连接已断开
-	AutoExit bool              // 当断开连接时，自动退出（抛出异常）
-	mu       sync.Mutex        // 💡 解決併發 Send 的衝突
+	config       *websocket.Config // 客户端配置
+	conn         *websocket.Conn   // 客户端连接
+	isClose      bool              // 是否断开连接
+	Ctx          ctx.Context       // 用于通知应用端是否断开连接
+	cancel       ctx.CancelFunc    // 用于通知Ctx，连接已断开
+	AutoExit     bool              // 当断开连接时，自动退出（抛出异常）
+	WriteTimeout time.Duration     // 单次发送的写超时，<=0 时使用 defaultWriteTimeout
+	mu           sync.Mutex        // 💡 解決併發 Send 的衝突
 }
 
 // NewClient 实例化对象
@@ -64,6 +68,18 @@ func (receiver *Client) SetHeader(key, value string) {
 // SetReadDeadline 设置读取超时时间
 func (receiver *Client) SetReadDeadline(timeout time.Duration) {
 	receiver.conn.SetReadDeadline(time.Now().Add(timeout))
+}
+
+// setWriteDeadline 设置本次发送的写超时，使用 WriteTimeout，未配置时回退到 defaultWriteTimeout
+func (receiver *Client) setWriteDeadline() {
+	if receiver.conn == nil {
+		return
+	}
+	timeout := receiver.WriteTimeout
+	if timeout <= 0 {
+		timeout = defaultWriteTimeout
+	}
+	receiver.conn.SetWriteDeadline(time.Now().Add(timeout))
 }
 
 // SetHeaderMap 设置header
@@ -129,6 +145,9 @@ func (receiver *Client) Send(msg any) error {
 
 	receiver.mu.Lock() // 💡 加鎖，確保同一時間只有一個協程在發包
 	defer receiver.mu.Unlock()
+
+	// 设置写超时，避免半开连接(对端无 RST)时 Write 长时间阻塞、不报错，从而导致调用方永远不触发重连
+	receiver.setWriteDeadline()
 
 	switch fastReflect.PointerOf(msg).Type {
 	case fastReflect.GoBasicType:
