@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/farseer-go/fs/configure"
-	"github.com/farseer-go/fs/container"
 	"github.com/farseer-go/fs/core"
 	"github.com/farseer-go/fs/parse"
 	"github.com/farseer-go/fs/snc"
@@ -41,7 +40,7 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 		return "", 0, nil, fmt.Errorf("已超过最大尝试次数")
 	}
 
-	traceDetail := container.Resolve[trace.IManager]().TraceHttp(methodName, requestUrl)
+	traceDetail := trace.Manager().TraceHttp(methodName, requestUrl)
 
 	// request
 	request := fasthttp.AcquireRequest()
@@ -89,7 +88,7 @@ func tryRequestProxy(methodName string, requestUrl string, head map[string]any, 
 	}
 
 	// 链路追踪
-	if traceContext, exists := container.Resolve[trace.IManager]().GetTraceContext(); exists {
+	if traceContext, exists := trace.Manager().GetTraceContext(); exists {
 		if head == nil {
 			head = make(map[string]any)
 		}
